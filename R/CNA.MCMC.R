@@ -77,4 +77,4 @@ CNA.MCMC <- function(clu,fttmat, bins, cut.cor, n.cores){
   names(res) <- c("logCNA","breaks")
   return(res)
 }
-############################################## end of MCMC function
+

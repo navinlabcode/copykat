@@ -328,28 +328,3 @@ copykat <- function(rawmat=rawdata, id.type="S", ngene.chr=5,LOW.DR=0.05, UP.DR=
   return(reslts)
 }
 
-annotateGenes.hg20 <- function(mat, ID.type="S"){
-  print("start annotation ...")
-
-  if(substring(ID.type,1,1) %in% c("E", "e")){
-    shar <- intersect(rownames(mat), full.anno$ensembl_gene_id)
-    mat <- mat[which(rownames(mat) %in% shar),]
-    anno <- full.anno[which(as.vector(full.anno$ensembl_gene_id) %in% shar),]
-    anno <- anno[!duplicated(anno$hgnc_symbol),]
-    anno <- anno[order(match(anno$ensembl_gene_id, rownames(mat))),]
-    data <- cbind(anno, mat)
-
-  }else if(substring(ID.type,1,1) %in% c("S", "s")) {
-
-    shar <- intersect(rownames(mat), full.anno$hgnc_symbol)
-    mat <- mat[which(rownames(mat) %in% shar),]
-    anno <- full.anno[which(as.vector(full.anno$hgnc_symbol) %in% shar),]
-    anno <- anno[!duplicated(anno$hgnc_symbol),]
-    anno <- anno[order(match(anno$hgnc_symbol, rownames(mat))),]
-    data <- cbind(anno, mat)
-  }
-}
-
-
-
-
