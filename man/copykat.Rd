@@ -7,13 +7,14 @@
 copykat(
   rawmat = rawdata,
   id.type = "S",
-  ngene.chr = 0,
-  LOW.DR = 0.1,
+  ngene.chr = 5,
+  LOW.DR = 0.05,
   UP.DR = 0.2,
   win.size = 25,
   norm.cell.names = "",
   KS.cut = 0.15,
   sam.name = "",
+  distance = "euclidean",
   n.cores = 1
 )
 }
