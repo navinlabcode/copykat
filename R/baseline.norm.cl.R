@@ -44,11 +44,13 @@ baseline.norm.cl <- function(norm.mat.smooth, min.cells=5, n.cores=n.cores){
   wn <- mean(cluster::silhouette(cutree(fit, k=2), d)[, "sil_width"])
 
   ####
-  PDt <- dt((min(SDM)-max(SDM))/mad(SDM),df=km-1)
+ PDt <- pf(max(SDM)^2/min(SDM)^2, nrow(norm.mat.smooth), nrow(norm.mat.smooth), lower.tail = FALSE)
+  #PDt <- dt((min(SDM)-max(SDM))/mad(SDM),df=km-1)
+
  # print(c("low sigma pvalue:", PDt))
   #print(c("low sd pvalue:", dt((min(SSD)-max(SSD))/mad(SSD),df=km-1)))
 
-  if(wn <= 0.15|(!all(table(ct)>min.cells))| PDt > 0.1){
+  if(wn <= 0.15|(!all(table(ct)>min.cells))| PDt > 0.05){
     WNS <- "unclassified.prediction"
     print("low confidence in classification")
   }else {
