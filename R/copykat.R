@@ -17,7 +17,7 @@
 #' test.ck <- copykat(rawmat=rawdata, sam.name="test", n.cores=10)
 #'
 #' test.pred <- test.ck$prediction
-#'
+#' @export
 copykat <- function(rawmat=rawdata, id.type="S", ngene.chr=5,LOW.DR=0.05, UP.DR=0.2, win.size=25, norm.cell.names="", KS.cut=0.15, sam.name="", distance="euclidean", n.cores=1){
 
   sample.name <- paste(sam.name,"_copykat_", sep="")

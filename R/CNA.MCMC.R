@@ -13,7 +13,7 @@
 #' test.mcmc <- CNA.MCMC(clu,fttmat, bins, cut.cor, n.cores=10)
 #'
 #' test.mcmc.seg.mat <- test.mamc$logCNA
-#'
+#' @export
 CNA.MCMC <- function(clu,fttmat, bins, cut.cor, n.cores){
   CON<- NULL
   for(i in min(clu):max(clu)){

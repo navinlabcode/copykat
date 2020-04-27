@@ -21,5 +21,4 @@ annotate genes with reference to hg38.
 }
 \examples{
 test.anno.mat <- annotateGenes.hg20(mat=matx, ID.type="ENSEMBLE_id", full.anno = full.anno)
-
 }

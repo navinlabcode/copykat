@@ -31,5 +31,4 @@ pre-define a group of normal cells with GMM.
 test.gmm <- baseline.GMM(CNA.mat=smooth.com, max.normal=30, mu.cut=0.05, Nfraq.cut=0.99)
 
 test.gmm.cells <- test.bnc$preN
-
 }

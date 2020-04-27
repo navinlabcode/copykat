@@ -49,5 +49,4 @@ copycat main_func.
 test.ck <- copykat(rawmat=rawdata, sam.name="test", n.cores=10)
 
 test.pred <- test.ck$prediction
-
 }

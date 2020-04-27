@@ -23,5 +23,4 @@ find a cluster of diploid cells with integrative clustering method
 test.bnc <- baseline.norm.cl(norm.mat.smooth=norm.mat.smooth, min.cells=5, n.cores=10)
 
 test.bnc.cells <- test.bnc$preN
-
 }

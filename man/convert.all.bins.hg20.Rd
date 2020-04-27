@@ -25,5 +25,4 @@ conver gene by cell matrix to genomic bins by cells matrix.
 test.cab <- convert.all.bins(DNA.mat, RNA.mat, n.cores=10)
 
 test.cab.uber <- test.cab$RNAadj
-
 }

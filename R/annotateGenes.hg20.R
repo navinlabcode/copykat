@@ -8,7 +8,7 @@
 #'
 #' @examples
 #' test.anno.mat <- annotateGenes.hg20(mat=matx, ID.type="ENSEMBLE_id", full.anno = full.anno)
-#'
+#' @export
 annotateGenes.hg20 <- function(mat, ID.type="S"){
   print("start annotation ...")
 

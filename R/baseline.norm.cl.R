@@ -11,7 +11,7 @@
 #' test.bnc <- baseline.norm.cl(norm.mat.smooth=norm.mat.smooth, min.cells=5, n.cores=10)
 #'
 #' test.bnc.cells <- test.bnc$preN
-#'
+#' @export
 
 
 baseline.norm.cl <- function(norm.mat.smooth, min.cells=5, n.cores=n.cores){

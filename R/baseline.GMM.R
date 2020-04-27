@@ -11,7 +11,7 @@
 #' test.gmm <- baseline.GMM(CNA.mat=smooth.com, max.normal=30, mu.cut=0.05, Nfraq.cut=0.99)
 #'
 #' test.gmm.cells <- test.bnc$preN
-#'
+#' @export
 baseline.GMM <- function(CNA.mat, max.normal=15, mu.cut=0.05, Nfraq.cut=0.99, n.cores){
 
      N.normal <-NULL

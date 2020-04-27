@@ -29,5 +29,4 @@ MCMC segmentation.
 test.mcmc <- CNA.MCMC(clu,fttmat, bins, cut.cor, n.cores=10)
 
 test.mcmc.seg.mat <- test.mamc$logCNA
-
 }

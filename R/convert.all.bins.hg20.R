@@ -11,7 +11,7 @@
 #' test.cab <- convert.all.bins(DNA.mat, RNA.mat, n.cores=10)
 #'
 #' test.cab.uber <- test.cab$RNAadj
-#'
+#' @export
 convert.all.bins.hg20 <- function(DNA.mat, RNA.mat, n.cores){
 ##make list obj for each window
          DNA <- DNA.mat[-which(DNA.mat$chrom==24),]; dim(DNA)
