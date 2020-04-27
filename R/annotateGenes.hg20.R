@@ -31,4 +31,3 @@ annotateGenes.hg20 <- function(mat, ID.type="S"){
   }
 }
 
-  ####
