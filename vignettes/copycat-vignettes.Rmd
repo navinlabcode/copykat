@@ -1,6 +1,6 @@
 ---
 title: "COPYKAT: Inference of genomic copy number and subclonal structure of human tumors from high-throughput single cell RNA data"
-author: "Ruli Gao <rgao@houstonmethodist.org>"
+author: "Author: Ruli Gao <rgao@houstonmethodist.org>"
 date: "December 31, 2019"
 output: rmarkdown::html_vignette
 vignette: >
@@ -22,8 +22,14 @@ knitr::opts_chunk$set(
 Installing copycat from GitHub
 ```{r, eval=FALSE}
 library(devtools)
-install_github("navinlabcode/copycat")
+install_github("navinlabcode/copykat")
 ```
+An example raw matrix is attached with this package named, exp.rawdata.
+
+To test the package with this dataset, simply issue this line of code in R/Rstudio:
+
+> copykat.test <- copykat(rawmat=exp.rawdata, sam.name="test")
+
 
 ## Step 2: prepare readcount input
 The only one direct input that you need to prepare to run copycat is the raw gene expression matrix, with gene ids in rows and cell names in columns. the gene ids can be gene symbol or ensemble id.  You do not need to worry about the genomic positions of each genes, copycat will do the annotation.  The matrix values are often the count of unique molecular identifier (UMI) from nowadays high througput single cell RNAseq data. The early generation of scRNAseq data may be summarized as TPM values or total read counts, which should also work. I will show you an example of generating input from 10Xgenomics cellranger output.
@@ -40,7 +46,7 @@ you can save the matrix for future use.
 ```{r, eval=FALSE}
 write.table(exp.rawdata, file="exp.rawdata.txt", sep="\t", quote = FALSE, row.names = TRUE)
 ```
-An example raw matrix can be found in data/ folder.
+
 
 In this vignette, I will take this example raw UMI count matrix to demonstrate the workflow.
 
