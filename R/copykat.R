@@ -2,6 +2,7 @@
 #'
 #' @param rawmat raw data matrix; genes in rows; cell names in columns.
 #' @param  id.type gene id type: Symbol or Ensemble.
+#' @param  cell.line if the data are from pure cell line,put "yes"; if cellline data are a mixture of tumor and normal cells, still put "no".
 #' @param LOW.DR minimal population fractoins of genes for smoothing.
 #' @param UP.DR minimal population fractoins of genes for segmentation.
 #' @param win.size minimal window sizes for segmentation.
@@ -20,7 +21,7 @@
 #' @export
 
 
-copykat <- function(rawmat=rawdata, id.type="S", ngene.chr=5,LOW.DR=0.05, UP.DR=0.2, win.size=25, norm.cell.names="", KS.cut=0.15, sam.name="", distance="euclidean", n.cores=1){
+copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW.DR=0.05, UP.DR=0.2, win.size=25, norm.cell.names="", KS.cut=0.15, sam.name="", distance="euclidean", n.cores=1){
 
 
   sample.name <- paste(sam.name,"_copykat_", sep="")
@@ -108,7 +109,15 @@ copykat <- function(rawmat=rawdata, id.type="S", ngene.chr=5,LOW.DR=0.05, UP.DR=
   colnames(norm.mat.smooth) <- colnames(norm.mat)
 
   print("step 4: measuring baselines ...")
-  if(length(norm.cell.names)>1){
+  if (cell.line=="yes"){
+  	print("running pure cell line mode")
+  	    relt <- baseline.synthetic(norm.mat=norm.mat.smooth, min.cells=10, n.cores)
+		norm.mat.relat <- relt$expr.relat
+		CL <- relt$cl
+        WNS <- "run with cell line mode"
+    	preN <- NULL
+
+  } else if(length(norm.cell.names)>1){
 
     #print(paste(length(norm.cell.names), "normal cells provided", sep=""))
     NNN <- length(colnames(norm.mat.smooth)[which(colnames(norm.mat.smooth) %in% norm.cell.names)])
@@ -135,6 +144,8 @@ copykat <- function(rawmat=rawdata, id.type="S", ngene.chr=5,LOW.DR=0.05, UP.DR=
 
     WNS <- "run with known normal"
     preN <- norm.cell.names
+     ##relative expression using pred.normal cells
+  	norm.mat.relat <- norm.mat.smooth-basel
 
   }else {
       basa <- baseline.norm.cl(norm.mat.smooth=norm.mat.smooth, min.cells=5, n.cores=n.cores)
@@ -148,14 +159,15 @@ copykat <- function(rawmat=rawdata, id.type="S", ngene.chr=5,LOW.DR=0.05, UP.DR=
               WNS <- basa$WNS
               preN <- basa$preN
               CL <- basa$cl
-       }
+       		}
+  ##relative expression using pred.normal cells
+  norm.mat.relat <- norm.mat.smooth-basel
 
   }
 
   ###use a smaller set of genes to perform segmentation
   DR2 <- apply(rawmat3,1,function(x)(sum(x>0)))/ncol(rawmat3)
   ##relative expression using pred.normal cells
-  norm.mat.relat <- norm.mat.smooth-basel  ####
   norm.mat.relat <- norm.mat.relat[which(DR2>=UP.DR),]
 
   ###filter cells
@@ -213,6 +225,66 @@ copykat <- function(rawmat=rawdata, id.type="S", ngene.chr=5,LOW.DR=0.05, UP.DR=
 
   print("step 7: adjust baseline ...")
 
+if(cell.line=="yes"){
+
+  mat.adj <- data.matrix(Aj$RNA.adj[, 4:ncol(Aj$RNA.adj)])
+  write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "CNA_results.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
+
+  if(distance=="euclidean"){
+    hcc <- hclust(parallelDist::parDist(t(mat.adj),threads =n.cores, method = distance), method = "ward.D")
+  }else {
+    hcc <- hclust(as.dist(1-cor(mat.adj, method = distance)), method = "ward.D")
+  }
+
+
+  saveRDS(hcc, file = paste(sample.name,"clustering_results.rda",sep=""))
+
+#plot heatmap
+ print("step 8: ploting heatmap ...")
+  my_palette <- colorRampPalette(rev(RColorBrewer::brewer.pal(n = 3, name = "RdBu")))(n = 999)
+
+  chr <- as.numeric(Aj$DNA.adj$chrom) %% 2+1
+  rbPal1 <- colorRampPalette(c('black','grey'))
+  CHR <- rbPal1(2)[as.numeric(chr)]
+  chr1 <- cbind(CHR,CHR)
+
+
+  if (ncol(mat.adj)< 3000){
+    h <- 10
+  } else {
+    h <- 15
+  }
+
+  col_breaks = c(seq(-1,-0.4,length=50),seq(-0.4,-0.2,length=150),seq(-0.2,0.2,length=600),seq(0.2,0.4,length=150),seq(0.4, 1,length=50))
+
+  if(distance=="euclidean"){
+  jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
+   heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),
+            ColSideColors=chr1,Colv=NA, Rowv=TRUE,
+            notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
+            keysize=1, density.info="none", trace="none",
+            cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
+            symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
+
+  dev.off()
+  } else {
+    jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
+    heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
+                 ColSideColors=chr1,Colv=NA, Rowv=TRUE,
+              notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
+              keysize=1, density.info="none", trace="none",
+              cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
+              symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
+
+    dev.off()
+  }
+  end_time<- Sys.time()
+  print(end_time -start_time)
+
+  reslts <- list(cbind(Aj$RNA.adj[, 1:3], mat.adj), hcc)
+  names(reslts) <- c("CNAmat","hclustering")
+  return(reslts)
+} else {
   ################removed baseline adjustment
   if(distance=="euclidean"){
   hcc <- hclust(parallelDist::parDist(t(uber.mat.adj),threads =n.cores, method = distance), method = "ward.D")
@@ -297,6 +369,7 @@ copykat <- function(rawmat=rawdata, id.type="S", ngene.chr=5,LOW.DR=0.05, UP.DR=
   ####save copycat CNA
   write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "CNA_results.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
 
+
   ####%%%%%%%%%%%%%%%%%next heatmaps, subpopulations and tSNE overlay
   print("step 10: ploting heatmap ...")
   my_palette <- colorRampPalette(rev(RColorBrewer::brewer.pal(n = 3, name = "RdBu")))(n = 999)
@@ -343,12 +416,13 @@ copykat <- function(rawmat=rawdata, id.type="S", ngene.chr=5,LOW.DR=0.05, UP.DR=
 
     dev.off()
   }
-
   end_time<- Sys.time()
   print(end_time -start_time)
 
   reslts <- list(res, cbind(Aj$RNA.adj[, 1:3], mat.adj), hcc)
   names(reslts) <- c("prediction", "CNAmat","hclustering")
   return(reslts)
+}
+
 }
 
