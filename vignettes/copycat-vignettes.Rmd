@@ -25,7 +25,7 @@ Installing copykat from GitHub
 library(devtools)
 install_github("navinlabcode/copykat")
 ```
-An example raw UMI matrix from a breast cancer tumor sequenced by 10X 3'RNAseq protocol is included with this package named exp.rawdata.
+An example raw UMI matrix from a breast tumor sequenced by 10X 3'RNAseq protocol is included with this package named exp.rawdata.
 
 To test the package, simply issue this line of code in R/Rstudio:
 
@@ -56,9 +56,13 @@ Now I have prepared the only one input, raw UMI count matrix, I am ready to run 
 
 I ask copykat to take at least 25 genes per segment. I can play around with other options ranging 15-150 genes per bin. KS.cut is the segmentation parameter, ranging from 0 to 1. Increasing KS.cut decreases sensitivity, ie. less segments/breakpoints. 
 
-Here I do parallel computation by setting n.cores = 4. I also give a sample name by setting sam.name="test". 
+Here I do parallel computation by setting n.cores = 4. Default value is 1. 
+
+I also give a sample name by setting sam.name="test". 
 
 One struggling and intesting observation is that none of one clustering method could fit all datasets. In this version, I add a distance parameters for clustering that include "euclidean" distannce and correlational distance, ie. 1-"pearson" and "spearman" similarity.  In general, corretional distances tend to favor noisy data, while euclidean distance tends to favor data with larger CN segments. 
+
+I add an option to input known normal cell names as a vector object. Default is NULL.
 
 I add a mode for cell line data that has only aneuploid or diploid cells. Setting this cell line mode by cell.line="yes". Default for tissue samples is cell.line="no". This cell line mode uses systhetic baslines from the data variations.
 
@@ -144,6 +148,13 @@ heatmap.3(t(tumor.mat),dendrogram="r", distfun = function(x) parallelDist::parDi
 
 ```
 Now I have defined two subpopulations with major subclonal differences, I can move forward to compare their gene expression profiles, and evaluate gene dosage effects of subclonal copy number changes.
+
+
+A final note, I also put some useful annotation data along with copykat: 
+1) full.anno: the full annotation of 56051 genes (hg38) including absolute positions, chr, start, end, ensemble id, gene symbol and G band.
+2) DNA.hg20: the coordinates in hg38 of the 220kb variable bins excluding Y chromosome.
+3) cyclegenes: that are removed from copykat analysis.
+4) exp.rawdata: UMI matrix from a breast tumor.
 
 Thank you.
 
