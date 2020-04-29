@@ -1,4 +1,4 @@
-# Inference of genomic copy number and subclonal structure of human tumors from high-throughput single cell RNAseq data
+# CopyKAT: Inference of genomic copy number and subclonal structure of human tumors from high-throughput single cell RNAseq data
 
 A major challenge for single cell RNA sequencing of human tumors is to distinguish cancer cells from stromal cell types, as well as the presence of multiple tumor subclones. CopyKAT(Copynumber Keyotyping of Tumors) is a computational tool using integrative Bayesian approaches to identify genome-wide aneuploidy at 5MB resolution in single cells to separate tumor cells from normal cells, and tumor subclones using high-throughput sc-RNAseq data. The underlying logic of calculating DNA copy numbers from RNAseq data is that gene expression levels of many adjacent genes can be dosed by genomic DNA copy numbers in that region. CopyKAT estimated copy numbers can achieve a high concordance (80%) with the actual DNA copy numbers obtained by whole genome DNA sequencing. The rationale for prediction tumor/normal cell states is that aneuploidy is common in human cancers (90%). Cells with extensive genome-wide copy number aberrations (aneuploidy) are considered as tumor cells, wherease stromal normal cells and immune cells often have 2N diploid or near-diploid copy number profiles.  In this vignette, I will take you go through the process of calculating single cell copy numbers, predicting tumor and normal cells, and inferring tumor cell subpopulations from single cells RNAseq data using R package {copykat}. 
 
@@ -143,5 +143,5 @@ Thank you.
 
 Ruli Gao <rgao@houstonmethodist.org>
 
-Apr29, 2020
+Apr 29, 2020
 
