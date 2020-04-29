@@ -10,7 +10,7 @@
 #' @param sam.name sample name.
 #' @param n.cores number of cores for parallel computing.
 #' @param ngene.chr minimal number of genes per chromosome for cell filtering.
-#'
+#' @param distance  distance methods include euclidean, and correlation coverted distance include pearson and spearman.
 #' @return 1) aneuploid/diploid prediction results; 2) CNA results in 220KB windows; 3) heatmap; 4) hclustering object.
 #'
 #' @examples
@@ -18,7 +18,10 @@
 #'
 #' test.pred <- test.ck$prediction
 #' @export
+
+
 copykat <- function(rawmat=rawdata, id.type="S", ngene.chr=5,LOW.DR=0.05, UP.DR=0.2, win.size=25, norm.cell.names="", KS.cut=0.15, sam.name="", distance="euclidean", n.cores=1){
+
 
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
@@ -122,7 +125,7 @@ copykat <- function(rawmat=rawdata, id.type="S", ngene.chr=5,LOW.DR=0.05, UP.DR=
     fit <- hclust(d, method="ward.D2")
     CL <- cutree(fit, km)
 
-    while(!all(table(ct)>min.cells)){
+    while(!all(table(ct)>5)){
       km <- km -1
       CL <- cutree(fit, k=km)
       if(km==2){
@@ -211,7 +214,11 @@ copykat <- function(rawmat=rawdata, id.type="S", ngene.chr=5,LOW.DR=0.05, UP.DR=
   print("step 7: adjust baseline ...")
 
   ################removed baseline adjustment
-  hcc <- hclust(parallelDist::parDist(t(uber.mat.adj),threads =n.cores, method = "euclidean"), method = "ward.D2")
+  if(distance=="euclidean"){
+  hcc <- hclust(parallelDist::parDist(t(uber.mat.adj),threads =n.cores, method = distance), method = "ward.D")
+  }else {
+  hcc <- hclust(as.dist(1-cor(uber.mat.adj, method = distance)), method = "ward.D")
+  }
   hc.umap <- cutree(hcc,2)
   names(hc.umap) <- colnames(results.com)
 
@@ -251,8 +258,13 @@ copykat <- function(rawmat=rawdata, id.type="S", ngene.chr=5,LOW.DR=0.05, UP.DR=
   mat.adj <- adj.results/rang
 
   print("step 8: final prediction ...")
-  hcc <- hclust(parallelDist::parDist(t(mat.adj),threads =n.cores, method = "euclidean"), method = "ward.D2")
-  #hcc <- hclust(as.dist(1-cor(mat.adj, method = "spearman")), method = "ward.D2")
+
+  if(distance=="euclidean"){
+    hcc <- hclust(parallelDist::parDist(t(mat.adj),threads =n.cores, method = distance), method = "ward.D")
+  }else {
+    hcc <- hclust(as.dist(1-cor(mat.adj, method = distance)), method = "ward.D")
+  }
+
   hc.umap <- cutree(hcc,2)
   names(hc.umap) <- colnames(results.com)
 
@@ -272,15 +284,15 @@ copykat <- function(rawmat=rawdata, id.type="S", ngene.chr=5,LOW.DR=0.05, UP.DR=
   names(com.preN) <- names(hc.umap)
 
   if(WNS=="unclassified.prediction"){
-    com.preN[which(com.preN == "diploid")] <- "c1:low.confidence"
-    com.preN[which(com.preN == "nondiploid")] <- "c2:low.confidence"
+    com.preN[which(com.preN == "diploid")] <- "c1:diploid:low.conf"
+    com.preN[which(com.preN == "nondiploid")] <- "c2:aneuploid:low.conf"
   }
 
   print("step 9: saving results...")
   res <- cbind(names(com.preN), com.preN)
   colnames(res) <- c("cell.names", "copykat.pred")
 
-  write.table(res, paste(sample.name, "prediction.txt",sep=""), sep="\t", row.names = FALSE, quote = F)
+  write.table(res, paste(sample.name, "prediction.txt",sep=""), sep="\t", row.names = FALSE, quote = FALSE)
 
   ####save copycat CNA
   write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "CNA_results.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
@@ -307,9 +319,9 @@ copykat <- function(rawmat=rawdata, id.type="S", ngene.chr=5,LOW.DR=0.05, UP.DR=
 
   col_breaks = c(seq(-1,-0.4,length=50),seq(-0.4,-0.2,length=150),seq(-0.2,0.2,length=600),seq(0.2,0.4,length=150),seq(0.4, 1,length=50))
 
+  if(distance=="euclidean"){
   jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
-  #  heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = "spearman")), hclustfun = function(x) hclust(x, method="ward.D2"),
-  heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = "euclidean"), hclustfun = function(x) hclust(x, method="ward.D2"),
+   heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),
             ColSideColors=chr1,RowSideColors=cells,Colv=NA, Rowv=TRUE,
             notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
             keysize=1, density.info="none", trace="none",
@@ -317,8 +329,20 @@ copykat <- function(rawmat=rawdata, id.type="S", ngene.chr=5,LOW.DR=0.05, UP.DR=
             symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
 
   legend("topright", paste("pred.",names(table(com.preN)),sep=""), pch=15,col=RColorBrewer::brewer.pal(n = 8, name = "Dark2")[2:1], cex=1)
-
   dev.off()
+  } else {
+    jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
+    heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
+                 ColSideColors=chr1,RowSideColors=cells,Colv=NA, Rowv=TRUE,
+              notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
+              keysize=1, density.info="none", trace="none",
+              cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
+              symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
+
+    legend("topright", paste("pred.",names(table(com.preN)),sep=""), pch=15,col=RColorBrewer::brewer.pal(n = 8, name = "Dark2")[2:1], cex=1)
+
+    dev.off()
+  }
 
   end_time<- Sys.time()
   print(end_time -start_time)
