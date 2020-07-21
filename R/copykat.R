@@ -27,7 +27,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
   start_time <- Sys.time()
-  print("running copykat v0.1")
+  print("running copykat v0.1.0")
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
 
