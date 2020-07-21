@@ -134,7 +134,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW
     fit <- hclust(d, method="ward.D2")
     CL <- cutree(fit, km)
 
-    while(!all(table(ct)>5)){
+    while(!all(table(CL)>5)){
       km <- km -1
       CL <- cutree(fit, k=km)
       if(km==2){
