@@ -12,7 +12,7 @@
 #'
 #' test.gmm.cells <- test.bnc$preN
 #' @export
-baseline.GMM <- function(CNA.mat, max.normal=15, mu.cut=0.05, Nfraq.cut=0.99, n.cores){
+baseline.GMM <- function(CNA.mat, max.normal=5, mu.cut=0.05, Nfraq.cut=0.99, RE.before, n.cores){
 
      N.normal <-NULL
      for(m in 1:ncol(CNA.mat)){
@@ -50,28 +50,17 @@ baseline.GMM <- function(CNA.mat, max.normal=15, mu.cut=0.05, Nfraq.cut=0.99, n.
     ct <- cutree(fit, k=km)
 
 
-    if(length(preN) == 15){
+    if(length(preN) >2){
       WNS <- ""
-      basel <- apply(CNA.mat[, which(colnames(CNA.mat) %in% preN)], 1, median)
+      basel <- apply(CNA.mat[, which(colnames(CNA.mat) %in% preN)], 1, mean)
 
       RE <- list(basel, WNS, preN, ct)
       names(RE) <- c("basel", "WNS", "preN", "cl")
       return(RE)
-
-    }else {
-      WNS <- "unclassified.prediction"
-      RE <- list(WNS, preN)
-      names(RE) <- c("WNS", "preN")
-      return(RE)
+    }else{
+      return(RE.before) ##found this bug
     }
 
-
-
-    RE <- list(basel, WNS, preN)
-    names(RE) <- c("basel", "WNS", "preN")
-
-
-    return(N.normal)
 
 }
 
