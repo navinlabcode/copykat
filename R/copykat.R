@@ -163,7 +163,6 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW
             WNS <- "manual adjust"
             print(WNS)
             }else{
-
                     basa <- baseline.GMM(CNA.mat=norm.mat.smooth, max.normal=5, mu.cut=0.05, Nfraq.cut=0.99,RE.before=basa,n.cores=n.cores)
                     basel <-basa$basel
                     WNS <- basa$WNS
