@@ -12,15 +12,15 @@
 #'
 #' test.gmm.cells <- test.bnc$preN
 #' @export
-baseline.GMM <- function(CNA.mat, max.normal=5, mu.cut=0.05, Nfraq.cut=0.99, RE.before, n.cores){
+baseline.GMM <- function(CNA.mat, max.normal=5, mu.cut=0.05, Nfraq.cut=0.99, RE.before=basa, n.cores=1){
 
      N.normal <-NULL
      for(m in 1:ncol(CNA.mat)){
 
-      # print(paste("cell: ", m, sep=""))
+      print(paste("cell: ", m, sep=""))
       sam <- CNA.mat[, m]
       sg <- max(c(0.05, 0.5*sd(sam)));
-      GM3 <- mixtools::normalmixEM(sam, lambda = rep(1,3)/3, mu = c(-0.2, 0, 0.2),sigma = sg,arbvar=FALSE,ECM=FALSE,maxit=2000);#maxrestarts=10; arbmean=TRUE; arbvar=TRUE;epsilon=0.01
+      GM3 <- mixtools::normalmixEM(sam, lambda = rep(1,3)/3, mu = c(-0.2, 0, 0.2),sigma = sg,arbvar=FALSE,ECM=FALSE,maxit=500);#maxrestarts=10; arbmean=TRUE; arbvar=TRUE;epsilon=0.01
 
       ###decide normal or tumor
       s <- sum(abs(GM3$mu)<=mu.cut)
@@ -60,7 +60,6 @@ baseline.GMM <- function(CNA.mat, max.normal=5, mu.cut=0.05, Nfraq.cut=0.99, RE.
     }else{
       return(RE.before) ##found this bug
     }
-
 
 }
 

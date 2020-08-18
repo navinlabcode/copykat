@@ -21,20 +21,20 @@
 #' @export
 
 
-copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW.DR=0.05, UP.DR=0.2, win.size=25, norm.cell.names="", KS.cut=0.15, sam.name="", distance="euclidean", n.cores=1){
+copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW.DR=0.05, UP.DR=0.2, win.size=25, norm.cell.names="", KS.cut=0.15, sam.name="", distance="euclidean", n.cores=4){
 
 
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
   start_time <- Sys.time()
-  print("running copykat v0.1.0")
+  print("running copykat v0.0.0")
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
 
   genes.raw <- apply(rawmat, 2, function(x)(sum(x>0)));
   if(sum(genes.raw> 100)==0) stop("none cells have more than 200 genes")
   if(sum(genes.raw<100)>1){
-    rawmat <- rawmat[, -which(genes.raw< 200)];
+    rawmat <- rawmat[, -which(genes.raw< 200)]
     print(paste("filtered out ", sum(genes.raw<=200), " cells with less than 200 genes; remaining ", ncol(rawmat), " cells", sep=""))
   }
   ##
@@ -111,7 +111,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW
   print("step 4: measuring baselines ...")
   if (cell.line=="yes"){
   	print("running pure cell line mode")
-  	    relt <- baseline.synthetic(norm.mat=norm.mat.smooth, min.cells=10, n.cores)
+  	    relt <- baseline.synthetic(norm.mat=norm.mat.smooth, min.cells=10, n.cores=n.cores)
 		norm.mat.relat <- relt$expr.relat
 		CL <- relt$cl
         WNS <- "run with cell line mode"
@@ -154,7 +154,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW
       preN <- basa$preN
       CL <- basa$cl
       if (WNS =="unclassified.prediction"){
-              basa <- baseline.GMM(CNA.mat=norm.mat.smooth, max.normal=15, mu.cut=0.05, Nfraq.cut=0.99, n.cores)
+              basa <- baseline.GMM(CNA.mat=norm.mat.smooth, max.normal=5, mu.cut=0.05, Nfraq.cut=0.99,RE.before=basa,n.cores=n.cores)
               basel <-basa$basel
               WNS <- basa$WNS
               preN <- basa$preN
