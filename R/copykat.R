@@ -52,8 +52,9 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW
 
   print("step 2: annotations gene coordinates ...")
   anno.mat <- annotateGenes.hg20(mat = rawmat, ID.type = id.type) #SYMBOL or ENSEMBLE
+  anno.mat <- anno.mat[order(anno.mat$abspos, decreasing = FALSE),]
 
- # print(paste(nrow(anno.mat)," genes annotated", sep=""))
+# print(paste(nrow(anno.mat)," genes annotated", sep=""))
 
   ### module 3 removing genes that are involved in cell cycling
   HLAs <- anno.mat$hgnc_symbol[grep("^HLA-", anno.mat$hgnc_symbol)]
