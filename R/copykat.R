@@ -26,6 +26,8 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW
 
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
+  Tc <- colnames(rawmat)[which(as.numeric(rawmat[which(rownames(rawmat)=="PTPRC"),])>1)]; length(Tc)
+
   start_time <- Sys.time()
   print("running copykat v0.0.1")
   print("step1: read and filter data ...")
@@ -155,14 +157,14 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW
       preN <- basa$preN
       CL <- basa$cl
       if (WNS =="unclassified.prediction"){
-        print("start manual mode")
-          Tc <- colnames(norm.mat.smooth)[which(as.numeric(norm.mat.smooth[which(rownames(norm.mat.smooth)=="PTPRC"),])>0)]
-          WNS <- paste("manual adjust performed with", length(Tc), " immune cells", sep="")
-          print(WNS)
 
-            if(length(Tc)> 5){
-            preN <- Tc
-            basel <- apply(norm.mat.smooth[, which(colnames(norm.mat.smooth) %in% preN)], 2,mean)
+        preN <- intersect(Tc, colnames(norm.mat.smooth))
+
+        if(length(preN)> 5){
+          print("start manual mode")
+          WNS <- paste("manual adjust performed with ", length(preN), " immune cells", sep="")
+          print(WNS)
+          basel <- apply(norm.mat.smooth[, which(colnames(norm.mat.smooth) %in% preN)], 2,mean)
 
             }else{
                     basa <- baseline.GMM(CNA.mat=norm.mat.smooth, max.normal=5, mu.cut=0.05, Nfraq.cut=0.99,RE.before=basa,n.cores=n.cores)
