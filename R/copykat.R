@@ -23,7 +23,7 @@
 
 copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW.DR=0.05, UP.DR=0.2, win.size=25, norm.cell.names="", KS.cut=0.15, sam.name="", distance="euclidean", n.cores=4){
 
-
+set.seed(1)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
   Tc <- colnames(rawmat)[which(as.numeric(rawmat[which(rownames(rawmat)=="PTPRC"),])>1)]; length(Tc)
@@ -270,7 +270,8 @@ if(cell.line=="yes"){
   }
 
   col_breaks = c(seq(-1,-0.4,length=50),seq(-0.4,-0.2,length=150),seq(-0.2,0.2,length=600),seq(0.2,0.4,length=150),seq(0.4, 1,length=50))
-
+library(parallelDist)
+  ??parDist
   if(distance=="euclidean"){
   jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
    heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),
