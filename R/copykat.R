@@ -21,26 +21,25 @@
 #' @export
 
 
-copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW.DR=0.05, UP.DR=0.2, win.size=25, norm.cell.names="", KS.cut=0.15, sam.name="", distance="euclidean", n.cores=4){
-
-set.seed(1)
+copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW.DR=0.05, UP.DR=0.2, win.size=25, norm.cell.names="", KS.cut=0.15, sam.name="", distance="euclidean", n.cores=1){
+  start_time <- Sys.time()
+  set.seed(1)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
-  Tc <- colnames(rawmat)[which(as.numeric(rawmat[which(rownames(rawmat)=="PTPRC"),])>1)]; length(Tc)
-
-  start_time <- Sys.time()
-  print("running copykat v0.0.1")
+  print("running copykat v1.0.2")
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
 
-  genes.raw <- apply(rawmat, 2, function(x)(sum(x>0)));
-  if(sum(genes.raw> 100)==0) stop("none cells have more than 200 genes")
+  genes.raw <- apply(rawmat, 2, function(x)(sum(x>0)))
+
+  if(sum(genes.raw> 200)==0) stop("none cells have more than 200 genes")
   if(sum(genes.raw<100)>1){
     rawmat <- rawmat[, -which(genes.raw< 200)]
     print(paste("filtered out ", sum(genes.raw<=200), " cells with less than 200 genes; remaining ", ncol(rawmat), " cells", sep=""))
   }
   ##
-  der<- apply(rawmat,1,function(x)(sum(x>0)))/ncol(rawmat);
+  der<- apply(rawmat,1,function(x)(sum(x>0)))/ncol(rawmat)
+
   if(sum(der>LOW.DR)>=1){
     rawmat <- rawmat[which(der > LOW.DR), ]; print(paste(nrow(rawmat)," genes past LOW.DR filtering", sep=""))
   }
@@ -66,7 +65,6 @@ set.seed(1)
   }
 
 #  print(paste(nrow(anno.mat)," genes after rm cell cycle genes", sep=""))
-
   ### secondary filtering
   ToRemov2 <- NULL
   for(i in 8:ncol(anno.mat)){
@@ -89,7 +87,6 @@ set.seed(1)
   }
 
  # print(paste("filtered out ", length(ToRemov2), " cells with less than ",ngene.chr, " genes per chr", sep=""))
-
   rawmat3 <- data.matrix(anno.mat[, 8:ncol(anno.mat)])
   norm.mat<- log(sqrt(rawmat3)+sqrt(rawmat3+1))
   norm.mat<- apply(norm.mat,2,function(x)(x <- x-mean(x)))
@@ -157,7 +154,7 @@ set.seed(1)
       preN <- basa$preN
       CL <- basa$cl
       if (WNS =="unclassified.prediction"){
-
+        Tc <- colnames(rawmat)[which(as.numeric(apply(rawmat[which(rownames(rawmat) %in% c("PTPRC", "LYZ", "PECAM")),],2, mean)) >1)]; length(Tc)
         preN <- intersect(Tc, colnames(norm.mat.smooth))
 
         if(length(preN)> 5){
@@ -270,8 +267,8 @@ if(cell.line=="yes"){
   }
 
   col_breaks = c(seq(-1,-0.4,length=50),seq(-0.4,-0.2,length=150),seq(-0.2,0.2,length=600),seq(0.2,0.4,length=150),seq(0.4, 1,length=50))
-library(parallelDist)
-  ??parDist
+#library(parallelDist)
+
   if(distance=="euclidean"){
   jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
    heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),

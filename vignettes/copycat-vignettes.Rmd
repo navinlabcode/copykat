@@ -133,7 +133,6 @@ tumor.mat <- CNA.test[, which(colnames(CNA.test) %in% tumor.cells)]
 hcc <- hclust(parallelDist::parDist(t(tumor.mat),threads =4, method = "euclidean"), method = "ward.D2")
 hc.umap <- cutree(hcc,2)
 
-library(RColorBrewer)
 rbPal <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Dark2")[3:4])
 subpop <- rbPal(2)[as.numeric(factor(hc.umap))]
 cells <- rbind(subpop,subpop)
