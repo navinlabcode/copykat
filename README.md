@@ -8,6 +8,8 @@ Installing copykat from GitHub
 library(devtools)
 install_github("navinlabcode/copykat")
 ```
+The current version is V1.0.2.  To update, please remove and detach old versions and then reinstall.
+
 An example raw UMI matrix from a breast tumor sequenced by 10X 3'RNAseq protocol is included with this package named exp.rawdata.
 
 To test the package, simply issue this line of code in R/Rstudio:
@@ -47,7 +49,8 @@ One struggling and intesting observation is that none of one clustering method c
 
 I add an option to input known normal cell names as a vector object. Default is NULL.
 
-I add a mode for cell line data that has only aneuploid or diploid cells. Setting this cell line mode by cell.line="yes". Default for tissue samples is cell.line="no". This cell line mode uses systhetic baslines from the data variations.
+I add a mode for cell line data that has only aneuploid or diploid cells. Setting this cell line mode by cell.line="yes". Default for tissue samples is cell.line="no". This cell line mode uses systhetic baslines from the data variations, which does not represent the published algorithms. This cell line mode does not guarantine the success nor the accuracy.
+
 
 Now I runn the code:
 
