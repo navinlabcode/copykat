@@ -248,7 +248,7 @@ if(cell.line=="yes"){
   }
 
 
-  saveRDS(hcc, file = paste(sample.name,"clustering_results.rda",sep=""))
+  saveRDS(hcc, file = paste(sample.name,"clustering_results.RDS",sep=""))
 
 #plot heatmap
  print("step 8: ploting heatmap ...")
