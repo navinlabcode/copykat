@@ -56,7 +56,7 @@ Now run the code:
 
 ```{r, message=FALSE}
 library(copykat)
-copykat.test <- copykat(rawmat=exp.rawdata, id.type="S", cell.line="no", ngene.chr=5, win.size=25, KS.cut=0.15, sam.name="test", distance="euclidean", n.cores=4)
+copykat.test <- copykat(rawmat=exp.rawdata, id.type="S", ngene.chr=5, win.size=25, KS.cut=0.15, sam.name="test", distance="euclidean", norm.cell.names="", n.cores=4)
 ```
 
 It might take a while to run a dataset with more than 10,000 single cells. It is suggested to run large dataset in terminal using "Rscript", instead of running copykat in interactive mode in R/Rstudio. I usually run 'Rscript run_copycat.R' in sever and taking either 10X output or raw UMI count matrix as input using the args.
