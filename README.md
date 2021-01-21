@@ -1,6 +1,6 @@
 # CopyKAT: Inference of genomic copy number and subclonal structure of human tumors from high-throughput single cell RNAseq data
 
-A major challenge for single cell RNA sequencing of human tumors is to distinguish cancer cells from stromal cell types, as well as the presence of multiple tumor subclones. CopyKAT(Copynumber Karyotyping of Tumors) is a computational tool using integrative Bayesian approaches to identify genome-wide aneuploidy at 5MB resolution in single cells to separate tumor cells from normal cells, and tumor subclones using high-throughput sc-RNAseq data. The underlying logic of calculating DNA copy numbers from RNAseq data is that gene expression levels of many adjacent genes can be dosed by genomic DNA copy numbers in that region. CopyKAT estimated copy numbers can achieve a high concordance (80%) with the actual DNA copy numbers obtained by whole genome DNA sequencing. The rationale for prediction tumor/normal cell states is that aneuploidy is common in human cancers (90%). Cells with extensive genome-wide copy number aberrations (aneuploidy) are considered as tumor cells, wherease stromal normal cells and immune cells often have 2N diploid or near-diploid copy number profiles.  In this vignette, I will take you go through the process of calculating single cell copy numbers, predicting tumor and normal cells, and inferring tumor cell subpopulations from single cells RNAseq data using R package {copykat}. 
+A major challenge for single cell RNA sequencing of human tumors is to distinguish cancer cells from non-malignant cell types, as well as the presence of multiple tumor subclones. CopyKAT(Copynumber Karyotyping of Tumors) is a computational tool using integrative Bayesian approaches to identify genome-wide aneuploidy at 5MB resolution in single cells to separate tumor cells from normal cells, and tumor subclones using high-throughput sc-RNAseq data. The underlying logic for calculating DNA copy number events from RNAseq data is that gene expression levels of many adjacent genes can provide depth information to infer genomic copy number in that region. CopyKAT estimated copy number profiles can achieve a high concordance (80%) with the actual DNA copy numbers obtained by whole genome DNA sequencing. The rationale for prediction tumor/normal cell states is that aneuploidy is common in human cancers (90%). Cells with extensive genome-wide copy number aberrations (aneuploidy) are considered as tumor cells, wherease stromal normal cells and immune cells often have 2N diploid or near-diploid copy number profiles.  In this vignette, I will take you go through the process of calculating single cell copy numbers, predicting tumor and normal cells, and inferring tumor cell subpopulations from single cells RNAseq data using R package {copykat}. 
 
 ## Step 1: installation
 Installing copykat from GitHub
@@ -8,6 +8,8 @@ Installing copykat from GitHub
 library(devtools)
 install_github("navinlabcode/copykat")
 ```
+The current version is V1.0.2.  To update, please remove and detach old versions and then reinstall.
+
 An example raw UMI matrix from a breast tumor sequenced by 10X 3'RNAseq protocol is included with this package named exp.rawdata.
 
 To test the package, simply issue this line of code in R/Rstudio:
@@ -37,7 +39,7 @@ In this vignette, I take the example UMI count matrix, exp.rawdata to demonstrat
 ## Step 3: run copykat
 Now I have prepared the only one input, raw UMI count matrix, I am ready to run copykat. The default gene ids in cellranger output is gene symbol, so I put "Symbol" or "S". To filter out cells, I require at least 5 genes in each chromosome to calculate DNA copy numbers. I can tune this down to ngene.chr=1 to keep as many cells as possible, however I think using at least 5 genes to represent one chromosome is not very stringent. To filter out genes, I can tune parameters to keep only genes that are expressed in LOW.DR to UP.DR fractions of cells. I put default LOW.DR=0.05, UP.DR=0.2. I can tune down these values to keep more genes in the analysis. I need to make sure that LOW.DR is smaller than UP.DR though.  
 
-I ask copykat to take at least 25 genes per segment. I can play around with other options ranging 15-150 genes per bin. KS.cut is the segmentation parameter, ranging from 0 to 1. Increasing KS.cut decreases sensitivity, ie. less segments/breakpoints. 
+I ask copykat to take at least 25 genes per segment. I can play around with other options ranging 15-150 genes per bin. KS.cut is the segmentation parameter, ranging from 0 to 1. Increasing KS.cut decreases sensitivity, i.e. less segments/breakpoints. 
 
 Here I do parallel computation by setting n.cores = 4. Default value is 1. 
 
@@ -47,13 +49,14 @@ One struggling and intesting observation is that none of one clustering method c
 
 I add an option to input known normal cell names as a vector object. Default is NULL.
 
-I add a mode for cell line data that has only aneuploid or diploid cells. Setting this cell line mode by cell.line="yes". Default for tissue samples is cell.line="no". This cell line mode uses systhetic baslines from the data variations.
+I add a mode for cell line data that has only aneuploid or diploid cells. Setting this cell line mode by cell.line="yes". Default for tissue samples is cell.line="no". This cell line mode uses systhetic baslines from the data variations, which does not represent the published algorithms. This cell line mode does not guarantine the success nor the accuracy.
 
-Now I runn the code:
+
+Now run the code:
 
 ```{r, message=FALSE}
 library(copykat)
-copykat.test <- copykat(rawmat=exp.rawdata, id.type="S", cell.line="no", ngene.chr=5, win.size=25, KS.cut=0.2, sam.name="test", distance="euclidean", n.cores=4)
+copykat.test <- copykat(rawmat=exp.rawdata, id.type="S", cell.line="no", ngene.chr=5, win.size=25, KS.cut=0.15, sam.name="test", distance="euclidean", n.cores=4)
 ```
 
 It might take a while to run a dataset with more than 10,000 single cells. It is suggested to run large dataset in terminal using "Rscript", instead of running copykat in interactive mode in R/Rstudio. I usually run 'Rscript run_copycat.R' in sever and taking either 10X output or raw UMI count matrix as input using the args.
