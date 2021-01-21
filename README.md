@@ -142,9 +142,9 @@ A final note, I also put some useful annotation data along with copykat:
 3) cyclegenes: that are removed from copykat analysis.
 4) exp.rawdata: UMI matrix from a breast tumor.
 
-Thank you.
+Final final note, CopyKAT had difficulty in predicting tumor and normal cells in the cases of pediatric and liquid tumors that have a few CNAs.  CopyKAT provides two ways to bypass this to give certain output instead of being dead staright: 1) input a vector of cell names of known normal cells from the same dataset 2) or try to search for T cells.
 
-Ruli Gao <rgao@houstonmethodist.org>
 
-Apr 29, 2020
+## Citation:
+Gao, R., Bai, S., Henderson, Y. C., Lin, Y., Schalck, A., Yan, Y., Kumar, T., Hu, M., Sei, E., Davis, A., Wang, F., Shaitelman, S. F., Wang, J. R., Chen, K., Moulder, S., Lai, S. Y. & Navin, N. E.  (2021). Delineating copy number and clonal substructure in human tumors from single-cell transcriptomes. Nat Biotechnol.  doi:10.1038/s41587-020-00795-2.
 
