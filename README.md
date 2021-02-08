@@ -1,6 +1,6 @@
 # CopyKAT: Inference of genomic copy number and subclonal structure of human tumors from high-throughput single cell RNAseq data
 
-A major challenge for single cell RNA sequencing of human tumors is to distinguish cancer cells from non-malignant cell types, as well as the presence of multiple tumor subclones. CopyKAT(Copynumber Karyotyping of Tumors) is a computational tool using integrative Bayesian approaches to identify genome-wide aneuploidy at 5MB resolution in single cells to separate tumor cells from normal cells, and tumor subclones using high-throughput sc-RNAseq data. The underlying logic for calculating DNA copy number events from RNAseq data is that gene expression levels of many adjacent genes can provide depth information to infer genomic copy number in that region. CopyKAT estimated copy number profiles can achieve a high concordance (80%) with the actual DNA copy numbers obtained by whole genome DNA sequencing. The rationale for prediction tumor/normal cell states is that aneuploidy is common in human cancers (90%). Cells with extensive genome-wide copy number aberrations (aneuploidy) are considered as tumor cells, wherease stromal normal cells and immune cells often have 2N diploid or near-diploid copy number profiles.  In this vignette, I will take you go through the process of calculating single cell copy numbers, predicting tumor and normal cells, and inferring tumor cell subpopulations from single cells RNAseq data using R package {copykat}. 
+A major challenge for single cell RNA sequencing of human tumors is to distinguish cancer cells from non-malignant cell types, as well as the presence of multiple tumor subclones. CopyKAT(Copynumber Karyotyping of Tumors) is a computational tool using integrative Bayesian approaches to identify genome-wide aneuploidy at 5MB resolution in single cells to separate tumor cells from normal cells, and tumor subclones using high-throughput sc-RNAseq data. The underlying logic for calculating DNA copy number events from RNAseq data is that gene expression levels of many adjacent genes can provide depth information to infer genomic copy number in that region. CopyKAT estimated copy number profiles can achieve a high concordance (80%) with the actual DNA copy numbers obtained by whole genome DNA sequencing. The rationale for prediction tumor/normal cell states is that aneuploidy is common in human cancers (90%). Cells with extensive genome-wide copy number aberrations (aneuploidy) are considered as tumor cells, wherease stromal normal cells and immune cells often have 2N diploid or near-diploid copy number profiles.  In this vignette, we will go through examples of calculating single cell copy number profiles from 10X single cell RNA data, predicting tumor and normal cells, and inferring tumor subclones from using the {copykat} R package. 
 
 ## Step 1: installation
 Installing copykat from GitHub
@@ -17,10 +17,10 @@ To test the package, simply issue this line of code in R/Rstudio:
 > copykat.test <- copykat(rawmat=exp.rawdata, sam.name="test")
 
 
-## Step 2: prepare readcount input
-The only one direct input that you need to prepare to run copykat is the raw gene expression matrix, with gene ids in rows and cell names in columns. The gene ids can be gene symbol or ensemble id.  The matrix values are often the count of unique molecular identifier (UMI) from nowadays high througput single cell RNAseq data. The early generation of scRNAseq data may be summarized as TPM values or total read counts, which should also work. Below I provide an example of generating this UMI count matrix from 10X output.
+## Step 2: prepare the readcount input file
+The only input file that you need to prepare to run copykat is the raw gene expression matrix, with gene ids in rows and cell names in columns. The gene ids can be gene symbol or ensemble id.  The matrix values are often the count of unique molecular identifier (UMI) from nowadays high througput single cell RNAseq data. The early generation of scRNAseq data may be summarized as TPM values or total read counts, which should also work. Below I provide an example of generating this UMI count matrix from 10X output.
 
-### An example to generate input from 10X genomics cellranger V3 output
+### An example to generate the input file from 10X genomics cellranger V3 output
 ```{r, eval=FALSE}
   library(Seurat)
   raw <- Read10X(data.dir = data.path.to.cellranger.outs)
@@ -28,15 +28,15 @@ The only one direct input that you need to prepare to run copykat is the raw gen
   exp.rawdata <- as.matrix(raw@assays$RNA@counts)
 ```
 
-I could save the matrix for future use.
+I can save the matrix for future usage.
 ```{r, eval=FALSE}
 write.table(exp.rawdata, file="exp.rawdata.txt", sep="\t", quote = FALSE, row.names = TRUE)
 ```
 
 
-In this vignette, I take the example UMI count matrix, exp.rawdata to demonstrate the workflow.
+In this vignette, we will use the example UMI count matrix, exp.rawdata to demonstrate the workflow.
 
-## Step 3: run copykat
+## Step 3: running copykat
 Now I have prepared the only one input, raw UMI count matrix, I am ready to run copykat. The default gene ids in cellranger output is gene symbol, so I put "Symbol" or "S". To filter out cells, I require at least 5 genes in each chromosome to calculate DNA copy numbers. I can tune this down to ngene.chr=1 to keep as many cells as possible, however I think using at least 5 genes to represent one chromosome is not very stringent. To filter out genes, I can tune parameters to keep only genes that are expressed in LOW.DR to UP.DR fractions of cells. I put default LOW.DR=0.05, UP.DR=0.2. I can tune down these values to keep more genes in the analysis. I need to make sure that LOW.DR is smaller than UP.DR though.  
 
 I ask copykat to take at least 25 genes per segment. I can play around with other options ranging 15-150 genes per bin. KS.cut is the segmentation parameter, ranging from 0 to 1. Increasing KS.cut decreases sensitivity, i.e. less segments/breakpoints. 
@@ -56,7 +56,7 @@ Now run the code:
 
 ```{r, message=FALSE}
 library(copykat)
-copykat.test <- copykat(rawmat=exp.rawdata, id.type="S", cell.line="no", ngene.chr=5, win.size=25, KS.cut=0.15, sam.name="test", distance="euclidean", n.cores=4)
+copykat.test <- copykat(rawmat=exp.rawdata, id.type="S", ngene.chr=5, win.size=25, KS.cut=0.15, sam.name="test", distance="euclidean", norm.cell.names="", n.cores=4)
 ```
 
 It might take a while to run a dataset with more than 10,000 single cells. It is suggested to run large dataset in terminal using "Rscript", instead of running copykat in interactive mode in R/Rstudio. I usually run 'Rscript run_copycat.R' in sever and taking either 10X output or raw UMI count matrix as input using the args.
@@ -142,9 +142,9 @@ A final note, I also put some useful annotation data along with copykat:
 3) cyclegenes: that are removed from copykat analysis.
 4) exp.rawdata: UMI matrix from a breast tumor.
 
-Thank you.
+Final final note, CopyKAT had difficulty in predicting tumor and normal cells in the cases of pediatric and liquid tumors that have a few CNAs.  CopyKAT provides two ways to bypass this to give certain output instead of being dead staright: 1) input a vector of cell names of known normal cells from the same dataset 2) or try to search for T cells.
 
-Ruli Gao <rgao@houstonmethodist.org>
 
-Apr 29, 2020
+## Citation:
+Gao, R., Bai, S., Henderson, Y. C., Lin, Y., Schalck, A., Yan, Y., Kumar, T., Hu, M., Sei, E., Davis, A., Wang, F., Shaitelman, S. F., Wang, J. R., Chen, K., Moulder, S., Lai, S. Y. & Navin, N. E.  (2021). Delineating copy number and clonal substructure in human tumors from single-cell transcriptomes. Nat Biotechnol.  doi:10.1038/s41587-020-00795-2.
 
