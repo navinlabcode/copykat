@@ -248,7 +248,7 @@ if(cell.line=="yes"){
   }
 
 
-  saveRDS(hcc, file = paste(sample.name,"clustering_results.RDS",sep=""))
+  saveRDS(hcc, file = paste(sample.name,"clustering_results.rds",sep=""))
 
 #plot heatmap
  print("step 8: ploting heatmap ...")
@@ -352,7 +352,7 @@ if(cell.line=="yes"){
   hc.umap <- cutree(hcc,2)
   names(hc.umap) <- colnames(results.com)
 
-  saveRDS(hcc, file = paste(sample.name,"clustering_results.rda",sep=""))
+  saveRDS(hcc, file = paste(sample.name,"clustering_results.rds",sep=""))
 
   cl.ID <- NULL
   for(i in 1:max(hc.umap)){
