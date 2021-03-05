@@ -26,7 +26,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW
   set.seed(1)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
-  print("running copykat v1.0.3")
+  print("running copykat v1.0.4")
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
 
@@ -228,6 +228,8 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW
   colnames(results$logCNA) <- colnames(norm.mat.relat)
   results.com <- apply(results$logCNA,2, function(x)(x <- x-mean(x)))
   RNA.copycat <- cbind(anno.mat2[, 1:7], results.com)
+
+  write.table(RNA.copycat, paste(sample.name, "CNA_raw_results_gene_by_cell.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
 
   print("step 6: convert to genomic bins...") ###need multi-core
   Aj <- convert.all.bins.hg20(DNA.mat = DNA.hg20, RNA.mat=RNA.copycat, n.cores = n.cores)
