@@ -154,7 +154,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW
       preN <- basa$preN
       CL <- basa$cl
       if (WNS =="unclassified.prediction"){
-        Tc <- colnames(rawmat)[which(as.numeric(apply(rawmat[which(rownames(rawmat) %in% c("PTPRC", "LYZ", "PECAM")),],2, mean)) >1)]; length(Tc)
+        Tc <- colnames(rawmat)[which(as.numeric(apply(rawmat[which(rownames(rawmat) %in% c("PTPRC", "LYZ", "PECAM1")),],2, mean)) >1)]; length(Tc)
         preN <- intersect(Tc, colnames(norm.mat.smooth))
 
         if(length(preN)> 5){
