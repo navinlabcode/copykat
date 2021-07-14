@@ -6,10 +6,11 @@
 \usage{
 baseline.GMM(
   CNA.mat,
-  max.normal = 15,
+  max.normal = 5,
   mu.cut = 0.05,
   Nfraq.cut = 0.99,
-  n.cores
+  RE.before = basa,
+  n.cores = 1
 )
 }
 \arguments{

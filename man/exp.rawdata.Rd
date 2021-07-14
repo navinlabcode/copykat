@@ -4,7 +4,9 @@
 \name{exp.rawdata}
 \alias{exp.rawdata}
 \title{raw UMI count matrix.}
-\format{A data matrix with 33694 rows (genes) and 1097 columns (single cell names):}
+\format{
+A data matrix with 33694 rows (genes) and 1097 columns (single cell names):
+}
 \usage{
 exp.rawdata
 }

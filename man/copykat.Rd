@@ -7,14 +7,16 @@
 copykat(
   rawmat = rawdata,
   id.type = "S",
+  cell.line = "no",
   ngene.chr = 5,
   LOW.DR = 0.05,
-  UP.DR = 0.2,
+  UP.DR = 0.1,
   win.size = 25,
   norm.cell.names = "",
-  KS.cut = 0.15,
+  KS.cut = 0.1,
   sam.name = "",
   distance = "euclidean",
+  output.seg = "FALSE",
   n.cores = 1
 )
 }
@@ -22,6 +24,8 @@ copykat(
 \item{rawmat}{raw data matrix; genes in rows; cell names in columns.}
 
 \item{id.type}{gene id type: Symbol or Ensemble.}
+
+\item{cell.line}{if the data are from pure cell line,put "yes"; if cellline data are a mixture of tumor and normal cells, still put "no".}
 
 \item{ngene.chr}{minimal number of genes per chromosome for cell filtering.}
 
@@ -36,6 +40,10 @@ copykat(
 \item{KS.cut}{segmentation parameters, input 0 to 1; larger looser criteria.}
 
 \item{sam.name}{sample name.}
+
+\item{distance}{distance methods include euclidean, and correlation coverted distance include pearson and spearman.}
+
+\item{output.seg}{TRUE or FALSE, output seg file for IGV visulization}
 
 \item{n.cores}{number of cores for parallel computing.}
 }

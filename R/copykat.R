@@ -12,6 +12,7 @@
 #' @param n.cores number of cores for parallel computing.
 #' @param ngene.chr minimal number of genes per chromosome for cell filtering.
 #' @param distance  distance methods include euclidean, and correlation coverted distance include pearson and spearman.
+#' @param output.seg TRUE or FALSE, output seg file for IGV visulization
 #' @return 1) aneuploid/diploid prediction results; 2) CNA results in 220KB windows; 3) heatmap; 4) hclustering object.
 #'
 #' @examples
@@ -21,12 +22,12 @@
 #' @export
 
 
-copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW.DR=0.05, UP.DR=0.1, win.size=25, norm.cell.names="", KS.cut=0.1, sam.name="", distance="euclidean", n.cores=1){
+copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW.DR=0.05, UP.DR=0.1, win.size=25, norm.cell.names="", KS.cut=0.1, sam.name="", distance="euclidean", output.seg="FALSE", n.cores=1){
   start_time <- Sys.time()
   set.seed(1)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
-  print("running copykat v1.0.4")
+  print("running copykat v1.0.5 updated 06/27/2021")
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
 
@@ -340,8 +341,9 @@ if(cell.line=="yes"){
   adj.results <- matrix(unlist(mc.adjN), ncol = ncol(results.com.rat), byrow = FALSE)
   colnames(adj.results) <- colnames(results.com.rat)
 
-  rang <- 0.5*(max(adj.results)-min(adj.results))
-  mat.adj <- adj.results/rang
+  #rang <- 0.5*(max(adj.results)-min(adj.results))
+  #mat.adj <- adj.results/rang
+  mat.adj <- t(t(adj.results)-apply(adj.results,2,mean))
 
   print("step 8: final prediction ...")
 
@@ -371,7 +373,7 @@ if(cell.line=="yes"){
 
   if(WNS=="unclassified.prediction"){
     com.preN[which(com.preN == "diploid")] <- "c1:diploid:low.conf"
-    com.preN[which(com.preN == "nondiploid")] <- "c2:aneuploid:low.conf"
+    com.preN[which(com.preN == "aneuploid")] <- "c2:aneuploid:low.conf"
   }
 
   print("step 9: saving results...")
@@ -382,7 +384,6 @@ if(cell.line=="yes"){
 
   ####save copycat CNA
   write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "CNA_results.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
-
 
   ####%%%%%%%%%%%%%%%%%next heatmaps, subpopulations and tSNE overlay
   print("step 10: ploting heatmap ...")
@@ -430,6 +431,52 @@ if(cell.line=="yes"){
 
     dev.off()
   }
+
+ if(output.seg=="TRUE"){
+  print("generating seg files for igv viewer")
+
+  thisRatio <- cbind(Aj$RNA.adj[, 1:3], mat.adj)
+  head(thisRatio[, 1:5])
+  Short <- NULL
+  chr <- rle(thisRatio$chrom)[[2]]
+
+  for(c in 4:ncol(thisRatio))
+  {
+    for (x in 1:length(chr)){
+      thisRatio.sub <- thisRatio[which(thisRatio$chrom==chr[x]), ]
+      seg.mean.sub <- rle(thisRatio.sub[,c])[[2]]
+
+      rle.length.sub <- rle(thisRatio.sub[,c])[[1]]
+
+      num.mark.sub <- seq(1,length(rle.length.sub),1)
+      loc.start.sub <-seq(1,length(rle.length.sub),1)
+      loc.end.sub <- seq(1,length(rle.length.sub),1)
+
+      len <-0
+      j <-1
+
+      for (j in 1: length(rle.length.sub)){
+        num.mark.sub[j] <- rle.length.sub[j]
+        loc.start.sub[j] <- thisRatio.sub$chrompos[len+1]
+        len <- num.mark.sub[j]+len
+        loc.end.sub[j] <- thisRatio.sub$chrompos[len]
+        j <- j+1
+      }
+
+      ID <- rep(colnames(thisRatio[c]), times=length(rle.length.sub))
+      chrom <- rep(chr[x], times=length(rle.length.sub))
+      Short.sub <- cbind(ID,chrom,loc.start.sub,loc.end.sub,num.mark.sub,seg.mean.sub)
+      Short <- rbind(Short, Short.sub)
+      x <- x+1
+    }
+    c<- c+1
+  }
+
+  colnames(Short) <- c("ID","chrom","loc.start","loc.end","num.mark","seg.mean")
+  head(Short)
+  write.table(Short, paste(sample.name, "CNA_results.seg", sep=""), row.names = FALSE, quote=FALSE, sep="\t")
+
+}
   end_time<- Sys.time()
   print(end_time -start_time)
 
