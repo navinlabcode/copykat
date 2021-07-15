@@ -8,7 +8,7 @@ Installing copykat from GitHub
 library(devtools)
 install_github("navinlabcode/copykat")
 ```
-The current version is V1.0.4.  To update, please remove and detach old versions and then reinstall.
+The current version is V1.0.5.  To update, please remove and detach old versions and then reinstall.
 
 An example raw UMI matrix from a breast tumor sequenced by 10X 3'RNAseq protocol is included with this package named exp.rawdata.
 
@@ -51,12 +51,14 @@ I add an option to input known normal cell names as a vector object. Default is 
 
 I add a mode for cell line data that has only aneuploid or diploid cells. Setting this cell line mode by cell.line="yes". Default for tissue samples is cell.line="no". This cell line mode uses systhetic baslines from the data variations, which does not represent the published algorithms. This cell line mode does not guarantine the success nor the accuracy.
 
+I add an option to output seg file for visuliazation with IGV viewer. Default is output.seg="FALSE", change to output.seg= "TRUE" if seg file is wanted.
+
 
 Now run the code:
 
 ```{r, message=FALSE}
 library(copykat)
-copykat.test <- copykat(rawmat=exp.rawdata, id.type="S", ngene.chr=5, win.size=25, KS.cut=0.1, sam.name="test", distance="euclidean", norm.cell.names="", n.cores=4)
+copykat.test <- copykat(rawmat=exp.rawdata, id.type="S", ngene.chr=5, win.size=25, KS.cut=0.1, sam.name="test", distance="euclidean", norm.cell.names="", n.cores=4,output.seg="FLASE")
 ```
 
 It might take a while to run a dataset with more than 10,000 single cells. It is suggested to run large dataset in terminal using "Rscript", instead of running copykat in interactive mode in R/Rstudio. I usually run 'Rscript run_copycat.R' in sever and taking either 10X output or raw UMI count matrix as input using the args.
