@@ -29,7 +29,7 @@ start_time <- Sys.time()
   set.seed(1000)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
-  print("running copykat v1.0.5 updated 07/14/2021")
+  print("running copykat v1.0.5 updated 07/15/2021")
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
 
@@ -157,23 +157,13 @@ start_time <- Sys.time()
       preN <- basa$preN
       CL <- basa$cl
       if (WNS =="unclassified.prediction"){
-       # Tc <- colnames(rawmat)[which(as.numeric(apply(rawmat[which(rownames(rawmat) %in% c("PTPRC", "LYZ", "PECAM1")),],2, mean)) >1)]; length(Tc)
-        #preN <- intersect(Tc, colnames(norm.mat.smooth))
 
-        #if(length(preN)> 5){
-         # print("start manual mode")
-          #WNS <- paste("copykat failed in locating normal cells; manual adjust performed with ", length(preN), " immune cells", sep="")
-          #print(WNS)
-          #basel <- apply(norm.mat.smooth[, which(colnames(norm.mat.smooth) %in% preN)], 1,mean)
-
-           # }else{
                     basa <- baseline.GMM(CNA.mat=norm.mat.smooth, max.normal=5, mu.cut=0.05, Nfraq.cut=0.99,RE.before=basa,n.cores=n.cores)
                     basel <-basa$basel
                     WNS <- basa$WNS
 
                     preN <- basa$preN
 
-                # }
               }
   ##relative expression using pred.normal cells
   norm.mat.relat <- norm.mat.smooth-basel
