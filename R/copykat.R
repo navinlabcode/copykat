@@ -16,18 +16,20 @@
 #' @return 1) aneuploid/diploid prediction results; 2) CNA results in 220KB windows; 3) heatmap; 4) hclustering object.
 #'
 #' @examples
-#' test.ck <- copykat(rawmat=rawdata, sam.name="test", n.cores=10)
+#' test.ck <- copykat(rawmat=rawdata,id.type="S", ngene.chr=5, win.size=25, KS.cut=0.1,sam.name="test", distance="euclidean", norm.cell.names="", n.cores=4, output.seg="FALSE")
+
 #'
 #' test.pred <- test.ck$prediction
 #' @export
+###
 
+copykat_ts <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW.DR=0.05, UP.DR=0.1, win.size=25, norm.cell.names="", KS.cut=0.1, sam.name="", distance="euclidean", output.seg="FALSE", n.cores=1){
 
-copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW.DR=0.05, UP.DR=0.1, win.size=25, norm.cell.names="", KS.cut=0.1, sam.name="", distance="euclidean", output.seg="FALSE", n.cores=1){
-  start_time <- Sys.time()
-  set.seed(1)
+start_time <- Sys.time()
+  set.seed(1000)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
-  print("running copykat v1.0.5 updated 06/27/2021")
+  print("running copykat v1.0.5 updated 07/14/2021")
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
 
@@ -118,30 +120,30 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW
         WNS <- "run with cell line mode"
     	preN <- NULL
 
-  } else if(length(norm.cell.names)>1){
+      } else if(length(norm.cell.names)>1){
 
-    #print(paste(length(norm.cell.names), "normal cells provided", sep=""))
-    NNN <- length(colnames(norm.mat.smooth)[which(colnames(norm.mat.smooth) %in% norm.cell.names)])
-    print(paste(NNN, " known normal cells found in dataset", sep=""))
+        #print(paste(length(norm.cell.names), "normal cells provided", sep=""))
+         NNN <- length(colnames(norm.mat.smooth)[which(colnames(norm.mat.smooth) %in% norm.cell.names)])
+         print(paste(NNN, " known normal cells found in dataset", sep=""))
 
-    if (NNN==0) stop("known normal cells provided; however none existing in testing dataset")
-    print("run with known normal...")
+         if (NNN==0) stop("known normal cells provided; however none existing in testing dataset")
+         print("run with known normal...")
 
-    basel <- apply(norm.mat.smooth[, which(colnames(norm.mat.smooth) %in% norm.cell.names)],1,median); print("baseline is from known input")
+         basel <- apply(norm.mat.smooth[, which(colnames(norm.mat.smooth) %in% norm.cell.names)],1,median); print("baseline is from known input")
 
-    d <- parallelDist::parDist(t(norm.mat.smooth),threads =n.cores, method="euclidean") ##use smooth and segmented data to detect intra-normal cells
+          d <- parallelDist::parDist(t(norm.mat.smooth),threads =n.cores, method="euclidean") ##use smooth and segmented data to detect intra-normal cells
 
-    km <- 6
-    fit <- hclust(d, method="ward.D2")
-    CL <- cutree(fit, km)
+          km <- 6
+          fit <- hclust(d, method="ward.D2")
+           CL <- cutree(fit, km)
 
-    while(!all(table(CL)>5)){
-      km <- km -1
-      CL <- cutree(fit, k=km)
-      if(km==2){
-        break
-      }
-    }
+           while(!all(table(CL)>5)){
+          km <- km -1
+          CL <- cutree(fit, k=km)
+         if(km==2){
+         break
+         }
+        }
 
     WNS <- "run with known normal"
     preN <- norm.cell.names
@@ -155,23 +157,24 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW
       preN <- basa$preN
       CL <- basa$cl
       if (WNS =="unclassified.prediction"){
-        Tc <- colnames(rawmat)[which(as.numeric(apply(rawmat[which(rownames(rawmat) %in% c("PTPRC", "LYZ", "PECAM1")),],2, mean)) >1)]; length(Tc)
-        preN <- intersect(Tc, colnames(norm.mat.smooth))
+       # Tc <- colnames(rawmat)[which(as.numeric(apply(rawmat[which(rownames(rawmat) %in% c("PTPRC", "LYZ", "PECAM1")),],2, mean)) >1)]; length(Tc)
+        #preN <- intersect(Tc, colnames(norm.mat.smooth))
 
-        if(length(preN)> 5){
-          print("start manual mode")
-          WNS <- paste("copykat failed in locating normal cells; manual adjust performed with ", length(preN), " immune cells", sep="")
-          print(WNS)
-          basel <- apply(norm.mat.smooth[, which(colnames(norm.mat.smooth) %in% preN)], 1,mean)
+        #if(length(preN)> 5){
+         # print("start manual mode")
+          #WNS <- paste("copykat failed in locating normal cells; manual adjust performed with ", length(preN), " immune cells", sep="")
+          #print(WNS)
+          #basel <- apply(norm.mat.smooth[, which(colnames(norm.mat.smooth) %in% preN)], 1,mean)
 
-            }else{
+           # }else{
                     basa <- baseline.GMM(CNA.mat=norm.mat.smooth, max.normal=5, mu.cut=0.05, Nfraq.cut=0.99,RE.before=basa,n.cores=n.cores)
                     basel <-basa$basel
                     WNS <- basa$WNS
+
                     preN <- basa$preN
 
-            }
-      }
+                # }
+              }
   ##relative expression using pred.normal cells
   norm.mat.relat <- norm.mat.smooth-basel
 
@@ -239,16 +242,16 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW
 
   print("step 7: adjust baseline ...")
 
-if(cell.line=="yes"){
+    if(cell.line=="yes"){
 
-  mat.adj <- data.matrix(Aj$RNA.adj[, 4:ncol(Aj$RNA.adj)])
-  write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "CNA_results.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
+    mat.adj <- data.matrix(Aj$RNA.adj[, 4:ncol(Aj$RNA.adj)])
+    write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "CNA_results.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
 
-  if(distance=="euclidean"){
+    if(distance=="euclidean"){
     hcc <- hclust(parallelDist::parDist(t(mat.adj),threads =n.cores, method = distance), method = "ward.D")
-  }else {
+    }else {
     hcc <- hclust(as.dist(1-cor(mat.adj, method = distance)), method = "ward.D")
-  }
+    }
 
 
   saveRDS(hcc, file = paste(sample.name,"clustering_results.rds",sep=""))
@@ -433,10 +436,9 @@ if(cell.line=="yes"){
   }
 
  if(output.seg=="TRUE"){
-  print("generating seg files for igv viewer")
+  print("generating seg files for IGV viewer")
 
   thisRatio <- cbind(Aj$RNA.adj[, 1:3], mat.adj)
-  head(thisRatio[, 1:5])
   Short <- NULL
   chr <- rle(thisRatio$chrom)[[2]]
 
