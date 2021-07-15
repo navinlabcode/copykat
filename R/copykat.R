@@ -26,7 +26,7 @@
 copykat_ts <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW.DR=0.05, UP.DR=0.1, win.size=25, norm.cell.names="", KS.cut=0.1, sam.name="", distance="euclidean", output.seg="FALSE", n.cores=1){
 
 start_time <- Sys.time()
-  set.seed(1000)
+  set.seed(123)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
   print("running copykat v1.0.5 updated 07/15/2021")
