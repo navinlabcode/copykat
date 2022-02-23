@@ -29,7 +29,7 @@ start_time <- Sys.time()
   set.seed(123)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
-  print("running copykat v1.0.5 updated 07/15/2021")
+  print("running copykat v1.0.6 updated 02/22/2022 fixed coordinate errors in two bins")
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
 
