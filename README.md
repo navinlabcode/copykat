@@ -8,7 +8,7 @@ Installing copykat from GitHub
 library(devtools)
 install_github("navinlabcode/copykat")
 ```
-The current version is V1.0.5.  To update, please remove and detach old versions and then reinstall.
+The current version is V1.0.6. Two coordinate errors related to new hg20 contigs were fixed. To update, please remove and detach old versions and then reinstall.
 
 An example raw UMI matrix from a breast tumor sequenced by 10X 3'RNAseq protocol is included with this package named exp.rawdata.
 
