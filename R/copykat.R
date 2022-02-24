@@ -23,7 +23,7 @@
 #' @export
 ###
 
-copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW.DR=0.05, UP.DR=0.1, win.size=25, norm.cell.names="", KS.cut=0.1, sam.name="", distance="euclidean", output.seg="FALSE", n.cores=1){
+copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW.DR=0.05, UP.DR=0.1, win.size=25, norm.cell.names="", KS.cut=0.1, sam.name="", distance="euclidean", output.seg="FALSE", plot.genes="TRUE", n.cores=1){
 
 start_time <- Sys.time()
   set.seed(123)
@@ -234,66 +234,105 @@ start_time <- Sys.time()
 
     if(cell.line=="yes"){
 
-    mat.adj <- data.matrix(Aj$RNA.adj[, 4:ncol(Aj$RNA.adj)])
-    write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "CNA_results.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
+          mat.adj <- data.matrix(Aj$RNA.adj[, 4:ncol(Aj$RNA.adj)])
+          write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "CNA_results.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
 
-    if(distance=="euclidean"){
-    hcc <- hclust(parallelDist::parDist(t(mat.adj),threads =n.cores, method = distance), method = "ward.D")
-    }else {
-    hcc <- hclust(as.dist(1-cor(mat.adj, method = distance)), method = "ward.D")
-    }
-
-
-  saveRDS(hcc, file = paste(sample.name,"clustering_results.rds",sep=""))
-
-#plot heatmap
- print("step 8: ploting heatmap ...")
-  my_palette <- colorRampPalette(rev(RColorBrewer::brewer.pal(n = 3, name = "RdBu")))(n = 999)
-
-  chr <- as.numeric(Aj$DNA.adj$chrom) %% 2+1
-  rbPal1 <- colorRampPalette(c('black','grey'))
-  CHR <- rbPal1(2)[as.numeric(chr)]
-  chr1 <- cbind(CHR,CHR)
+          if(distance=="euclidean"){
+           hcc <- hclust(parallelDist::parDist(t(mat.adj),threads =n.cores, method = distance), method = "ward.D")
+          }else {
+             hcc <- hclust(as.dist(1-cor(mat.adj, method = distance)), method = "ward.D")
+               }
 
 
-  if (ncol(mat.adj)< 3000){
-    h <- 10
-  } else {
-    h <- 15
-  }
+          saveRDS(hcc, file = paste(sample.name,"clustering_results.rds",sep=""))
 
-  col_breaks = c(seq(-1,-0.4,length=50),seq(-0.4,-0.2,length=150),seq(-0.2,0.2,length=600),seq(0.2,0.4,length=150),seq(0.4, 1,length=50))
-#library(parallelDist)
+          #plot heatmap
+          print("step 8: ploting heatmap ...")
+          my_palette <- colorRampPalette(rev(RColorBrewer::brewer.pal(n = 3, name = "RdBu")))(n = 999)
 
-  if(distance=="euclidean"){
-  jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
-   heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),
+          chr <- as.numeric(Aj$DNA.adj$chrom) %% 2+1
+          rbPal1 <- colorRampPalette(c('black','grey'))
+          CHR <- rbPal1(2)[as.numeric(chr)]
+          chr1 <- cbind(CHR,CHR)
+
+
+          if (ncol(mat.adj)< 3000){
+          h <- 10
+           } else {
+           h <- 15
+            }
+
+           col_breaks = c(seq(-1,-0.4,length=50),seq(-0.4,-0.2,length=150),seq(-0.2,0.2,length=600),seq(0.2,0.4,length=150),seq(0.4, 1,length=50))
+          #library(parallelDist)
+
+            if(distance=="euclidean"){
+            jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
+            heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),
             ColSideColors=chr1,Colv=NA, Rowv=TRUE,
             notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
             keysize=1, density.info="none", trace="none",
             cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
             symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
+            dev.off()
+            ### add a step to plot out gene by cell matrix
+              if(plot.genes=="TRUE"){
+                dim(results.com)
+                rownames(results.com) <- anno.mat2$hgnc_symbol
+                chrg <- as.numeric(anno.mat2$chrom) %% 2+1
+                rbPal1g <- colorRampPalette(c('black','grey'))
+                CHRg <- rbPal1(2)[as.numeric(chrg)]
+                chr1g <- cbind(CHRg,CHRg)
 
-  dev.off()
-  } else {
-    jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
-    heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
-                 ColSideColors=chr1,Colv=NA, Rowv=TRUE,
-              notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
-              keysize=1, density.info="none", trace="none",
-              cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
-              symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
+                pdf(paste(sample.name,"with_genes_heatmap.pdf",sep=""), height=h*2.5, width=40)
+                heatmap.3(t(results.com),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),
+                          ColSideColors=chr1g,Colv=NA, Rowv=TRUE,
+                          notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
+                          keysize=1, density.info="none", trace="none",
+                          cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
+                          symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
+                dev.off()
+              }
+              #end of ploting gene by cell matrix
 
-    dev.off()
-  }
-  end_time<- Sys.time()
-  print(end_time -start_time)
+            } else {
+            jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
+            heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
+            ColSideColors=chr1,Colv=NA, Rowv=TRUE,
+            notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
+            keysize=1, density.info="none", trace="none",
+            cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
+            symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
+            dev.off()
+            ### add a step to plot out gene by cell matrix
+            if(plot.genes=="TRUE"){
+              dim(results.com)
+              rownames(results.com) <- anno.mat2$hgnc_symbol
+              chrg <- as.numeric(anno.mat2$chrom) %% 2+1
+              rbPal1g <- colorRampPalette(c('black','grey'))
+              CHRg <- rbPal1(2)[as.numeric(chrg)]
+              chr1g <- cbind(CHRg,CHRg)
 
-  reslts <- list(cbind(Aj$RNA.adj[, 1:3], mat.adj), hcc)
-  names(reslts) <- c("CNAmat","hclustering")
-  return(reslts)
-} else {
-  ################removed baseline adjustment
+              pdf(paste(sample.name,"with_genes_heatmap.pdf",sep=""), height=h*2.5, width=40)
+              heatmap.3(t(results.com),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
+                        ColSideColors=chr1g,Colv=NA, Rowv=TRUE,
+                        notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
+                        keysize=1, density.info="none", trace="none",
+                        cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
+                        symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
+              dev.off()
+              }
+            #end of ploting gene by cell matrix
+            }
+
+           end_time<- Sys.time()
+           print(end_time -start_time)
+
+           reslts <- list(cbind(Aj$RNA.adj[, 1:3], mat.adj), hcc)
+           names(reslts) <- c("CNAmat","hclustering")
+           return(reslts)
+    } else {
+      #start from here, not cell line data
+      #removed baseline adjustment
   if(distance=="euclidean"){
   hcc <- hclust(parallelDist::parDist(t(uber.mat.adj),threads =n.cores, method = distance), method = "ward.D")
   }else {
@@ -370,9 +409,15 @@ start_time <- Sys.time()
   }
 
   print("step 9: saving results...")
-  res <- cbind(names(com.preN), com.preN)
-  colnames(res) <- c("cell.names", "copykat.pred")
 
+  ##add back filtered cells as not defined in prediction results
+  '%!in%' <- function(x,y)!('%in%'(x,y))
+  ndef <- colnames(rawmat)[which(colnames(rawmat) %!in% names(com.preN)[1:290])]
+  if(length(ndef)>0){
+    res <- data.frame(cbind(c(names(com.preN),ndef), c(com.preN, rep("not.defined",length(ndef)))))
+    colnames(res) <- c("cell.names", "copykat.pred")
+  }
+  ##end
   write.table(res, paste(sample.name, "prediction.txt",sep=""), sep="\t", row.names = FALSE, quote = FALSE)
 
   ####save copycat CNA
@@ -411,6 +456,29 @@ start_time <- Sys.time()
 
   legend("topright", paste("pred.",names(table(com.preN)),sep=""), pch=15,col=RColorBrewer::brewer.pal(n = 8, name = "Dark2")[2:1], cex=1)
   dev.off()
+
+  ### add a step to plot out gene by cell matrix
+  if(plot.genes=="TRUE"){
+    dim(results.com)
+    rownames(results.com) <- anno.mat2$hgnc_symbol
+    chrg <- as.numeric(anno.mat2$chrom) %% 2+1
+    rbPal1g <- colorRampPalette(c('black','grey'))
+    CHRg <- rbPal1(2)[as.numeric(chrg)]
+    chr1g <- cbind(CHRg,CHRg)
+
+    pdf(paste(sample.name,"with_genes_heatmap.pdf",sep=""), height=h*2.5, width=40)
+    heatmap.3(t(results.com),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),
+              ColSideColors=chr1g,Colv=NA, Rowv=TRUE,
+              notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
+              keysize=1, density.info="none", trace="none",
+              cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
+              symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
+    dev.off()
+  }
+  #end of ploting gene by cell matrix
+
+
+
   } else {
     jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
     heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
@@ -423,6 +491,25 @@ start_time <- Sys.time()
     legend("topright", paste("pred.",names(table(com.preN)),sep=""), pch=15,col=RColorBrewer::brewer.pal(n = 8, name = "Dark2")[2:1], cex=1)
 
     dev.off()
+    ### add a step to plot out gene by cell matrix
+    if(plot.genes=="TRUE"){
+      dim(results.com)
+      rownames(results.com) <- anno.mat2$hgnc_symbol
+      chrg <- as.numeric(anno.mat2$chrom) %% 2+1
+      rbPal1g <- colorRampPalette(c('black','grey'))
+      CHRg <- rbPal1(2)[as.numeric(chrg)]
+      chr1g <- cbind(CHRg,CHRg)
+
+      pdf(paste(sample.name,"with_genes_heatmap.pdf",sep=""), height=h*2.5, width=40)
+      heatmap.3(t(results.com),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
+                ColSideColors=chr1g,Colv=NA, Rowv=TRUE,
+                notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
+                keysize=1, density.info="none", trace="none",
+                cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
+                symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
+      dev.off()
+    }
+    #end of ploting gene by cell matrix
   }
 
  if(output.seg=="TRUE"){
