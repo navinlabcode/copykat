@@ -28,7 +28,7 @@
 copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW.DR=0.05, UP.DR=0.1, win.size=25, norm.cell.names="", KS.cut=0.1, sam.name="", distance="euclidean", output.seg="FALSE", plot.genes="TRUE", genome="hg20", n.cores=1){
 
 start_time <- Sys.time()
-  set.seed(123)
+  set.seed(1234)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
   print("running copykat v1.0.7 updated 02/24/2022 introduced mm10 module")
