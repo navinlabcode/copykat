@@ -8,9 +8,15 @@ Installing copykat from GitHub
 library(devtools)
 install_github("navinlabcode/copykat")
 ```
-The current version is V1.0.6. Two coordinate errors related to new hg20 contigs were fixed. To update, please remove and detach old versions and then reinstall.
+### The current version is V1.0.6. 
+To update, please remove and detach old versions and then reinstall.  Changes in this version:
+Two coordinate errors related to new hg20 contigs were fixed. 
+Added heatmap plot of the gene by cell matrix; genenames are plotted in the heatmap in the PDF files.  Zooming into the bottom of the heatmap to find gene names in each segment.  Due to the large file size, it could be slow. Default is: plot.genes="TRUE". Users can change it to plot.genes="FALSE" if genenames are not wanted.
+Added the filtered cells back to the prediction results
+Output the *.seg file, which can be loaded to IGV viewer to visualize the results directly.  default: output.seg="FALSE".  Users can change to:output.seg="TRUE". 
 
-An example raw UMI matrix from a breast tumor sequenced by 10X 3'RNAseq protocol is included with this package named exp.rawdata.
+### Instruction continued
+An example raw UMI matrix from a breast tumor sequenced by 10X 3'RNAseq protocol is included with this package named, exp.rawdata.
 
 To test the package, simply issue this line of code in R/Rstudio:
 
