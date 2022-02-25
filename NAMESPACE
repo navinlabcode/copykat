@@ -2,6 +2,7 @@
 export(copykat)
 export(CNA.MCMC)
 export(annotateGenes.hg20)
+export(annotateGenes.mm10)
 export(baseline.GMM)
 export(baseline.norm.cl)
 export(convert.all.bins.hg20)

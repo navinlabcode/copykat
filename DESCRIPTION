@@ -1,7 +1,7 @@
 Package: copykat
 Type: Package
 Title: COPYKAT: Inference of genomic copy number and subclonal structure of human tumors from high-throughput single cell RNA-seq data
-Version: 1.0.6
+Version: 1.0.7
 Author: Ruli Gao
 Maintainer: Ruli Gao <rgao@houstonmethodist.org>
 Description: COPYKAT is a computational tool using integrative Bayesian approaches to identify genome-wide aneuploidy at 5MB resolution in single cells to separate aneuploid (tumor) cells from diploid (normal) cells, and tumor subclones using high-throughput sc-RNAseq data.
