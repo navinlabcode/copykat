@@ -574,8 +574,11 @@ start_time <- Sys.time()
   return(reslts)
 }
 
-  }else if(genome=="mm10") {
+  }
+
+  if(genome=="mm10") {
     uber.mat.adj <- data.matrix(results.com)
+    dim(uber.mat.adj)
     if(distance=="euclidean"){
       hcc <- hclust(parallelDist::parDist(t(uber.mat.adj),threads =n.cores, method = distance), method = "ward.D")
     }else {
@@ -599,6 +602,7 @@ start_time <- Sys.time()
 
     ################removed baseline adjustment
     results.com.rat <- uber.mat.adj-apply(uber.mat.adj[,which(com.pred=="diploid")], 1, mean)
+
     results.com.rat <- apply(results.com.rat,2,function(x)(x <- x-mean(x)))
     results.com.rat.norm <- results.com.rat[,which(com.pred=="diploid")]; dim(results.com.rat.norm)
 
@@ -608,7 +612,7 @@ start_time <- Sys.time()
     adjN <- function(j){
       a <- results.com.rat[, j]
       a[abs(a-base) <= 0.25*cf.h] <- mean(a)
-
+      a
     }
 
 
@@ -673,7 +677,7 @@ start_time <- Sys.time()
     rownames(mat.adj) <- anno.mat2$mgi_symbol
     chrg <- as.numeric(anno.mat2$chromosome_name) %% 2+1
     rbPal1g <- colorRampPalette(c('black','grey'))
-    CHRg <- rbPal1(2)[as.numeric(chrg)]
+    CHRg <- rbPal1g(2)[as.numeric(chrg)]
     chr1g <- cbind(CHRg,CHRg)
 
 
@@ -718,7 +722,7 @@ start_time <- Sys.time()
 
     if(output.seg=="TRUE"){
       print("generating seg files for IGV viewer")
-head(anno.mat2[, 1:5])
+
       thisRatio <- cbind(anno.mat2[, c(2,3,1)], mat.adj)
       Short <- NULL
       chr <- rle(thisRatio$chromosome_name)[[2]]
