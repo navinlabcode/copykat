@@ -361,7 +361,7 @@ start_time <- Sys.time()
 
   com.pred <- names(hc.umap)
   com.pred[which(hc.umap == which(cl.ID==max(cl.ID)))] <- "diploid"
-  com.pred[which(hc.umap == which(cl.ID==min(cl.ID)))] <- "nondiploid"
+  com.pred[which(hc.umap == which(cl.ID==min(cl.ID)))] <- "aneuploid"
   names(com.pred) <- names(hc.umap)
 
   ################removed baseline adjustment
@@ -594,7 +594,7 @@ start_time <- Sys.time()
 
     com.pred <- names(hc.umap)
     com.pred[which(hc.umap == which(cl.ID==max(cl.ID)))] <- "diploid"
-    com.pred[which(hc.umap == which(cl.ID==min(cl.ID)))] <- "nondiploid"
+    com.pred[which(hc.umap == which(cl.ID==min(cl.ID)))] <- "aneuploid"
     names(com.pred) <- names(hc.umap)
 
     ################removed baseline adjustment
@@ -643,7 +643,7 @@ start_time <- Sys.time()
 
     com.preN <- names(hc.umap)
     com.preN[which(hc.umap == which(cl.ID==max(cl.ID)))] <- "diploid"
-    com.preN[which(hc.umap == which(cl.ID==min(cl.ID)))] <- "nondiploid"
+    com.preN[which(hc.umap == which(cl.ID==min(cl.ID)))] <- "aneuploid"
     names(com.preN) <- names(hc.umap)
 
     if(WNS=="unclassified.prediction"){
