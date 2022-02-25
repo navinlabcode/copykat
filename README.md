@@ -8,10 +8,13 @@ Installing copykat from GitHub
 library(devtools)
 install_github("navinlabcode/copykat")
 ```
-### The current version is V1.0.6. 
-To update, please remove and detach old versions and then reinstall.  Changes in this version:
+### The current version is V1.0.7. Updated on Feb 24, 2022
+To update, please remove old version with remove.packages("copykat") and reinstall it.  Changes in this version:
+Introducted methods for calculating copy numbers from mouse scRNAseq data (to run mouse module, set genome="mm10" in the main function).  This version outputs single cell copy number results in gene by cell dimension.  Gene names are plotted in the bottom of heatmap.  Zooming into the heatmap to read gene names.
+
+### Updates in V1.0.6.
 Two coordinate errors related to new hg20 contigs were fixed. 
-Added heatmap plot of the gene by cell matrix; genenames are plotted in the heatmap in the PDF files.  Zooming into the bottom of the heatmap to find gene names in each segment.  Due to the large file size, it could be slow. Default is: plot.genes="TRUE". Users can change it to plot.genes="FALSE" if genenames are not wanted.
+Added heatmap plot of single cell copy number results with gene by cell matrix; genenames are plotted in the heatmap in the PDF files. Zooming into the bottom of the heatmap to find gene names in each segment.  Due to the large file size, it could be slow. Default is: plot.genes="TRUE". Users can change it to plot.genes="FALSE" if genenames are not wanted.
 Added the filtered cells back to the prediction results
 Output the *.seg file, which can be loaded to IGV viewer to visualize the results directly.  default: output.seg="FALSE".  Users can change to:output.seg="TRUE". 
 
@@ -59,12 +62,13 @@ I add a mode for cell line data that has only aneuploid or diploid cells. Settin
 
 I add an option to output seg file for visuliazation with IGV viewer. Default is output.seg="FALSE", change to output.seg= "TRUE" if seg file is wanted.
 
+I add an additional plot of single cell copy number results with gene by cell matrix.  This is by default, plot.genes="TRUE".
 
 Now run the code:
 
 ```{r, message=FALSE}
 library(copykat)
-copykat.test <- copykat(rawmat=exp.rawdata, id.type="S", ngene.chr=5, win.size=25, KS.cut=0.1, sam.name="test", distance="euclidean", norm.cell.names="", n.cores=4,output.seg="FLASE")
+copykat.test <- copykat(rawmat=exp.rawdata, id.type="S", ngene.chr=5, win.size=25, KS.cut=0.1, sam.name="test", distance="euclidean", norm.cell.names="",output.seg="FLASE", plot.genes="TRUE", genome="hg20",n.cores=1)
 ```
 
 It might take a while to run a dataset with more than 10,000 single cells. It is suggested to run large dataset in terminal using "Rscript", instead of running copykat in interactive mode in R/Rstudio. I usually run 'Rscript run_copycat.R' in sever and taking either 10X output or raw UMI count matrix as input using the args.
@@ -146,9 +150,10 @@ Now I have defined two subpopulations with major subclonal differences, I can mo
 
 A final note, I also put some useful annotation data along with copykat: 
 1) full.anno: the full annotation of 56051 genes (hg38) including absolute positions, chr, start, end, ensemble id, gene symbol and G band.
-2) DNA.hg20: the coordinates in hg38 of the 220kb variable bins excluding Y chromosome.
-3) cyclegenes: that are removed from copykat analysis.
-4) exp.rawdata: UMI matrix from a breast tumor.
+2) full.anno.mm10: the full annotation of 51450 genes (mm10) including absolute positions, chr, start, end, ensemble id, gene symbol and G band.
+3) DNA.hg20: the coordinates in hg38 of the 220kb variable bins excluding Y chromosome.
+4) cyclegenes: that are removed from copykat analysis.
+5) exp.rawdata: UMI matrix from a breast tumor.
 
 Final final note, CopyKAT had difficulty in predicting tumor and normal cells in the cases of pediatric and liquid tumors that have a few CNAs.  CopyKAT provides two ways to bypass this to give certain output instead of being dead staright: 1) input a vector of cell names of known normal cells from the same dataset 2) or try to search for T cells.
 
