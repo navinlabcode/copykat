@@ -8,13 +8,13 @@ Installing copykat from GitHub
 library(devtools)
 install_github("navinlabcode/copykat")
 ```
-### The current version is V1.0.7. Updated on Feb 24, 2022
-To update, please remove old version with remove.packages("copykat") and reinstall it.  Changes in this version:
-Introducted methods for calculating copy numbers from mouse scRNAseq data (to run mouse module, set genome="mm10" in the main function).  This version outputs single cell copy number results in gene by cell dimension.  Gene names are plotted in the bottom of heatmap.  Zooming into the heatmap to read gene names.
+### The current version is V1.0.8. Updated on Feb 25, 2022
+To update, please remove old version with remove.packages("copykat"), detach it with detach("package:copykat") and reinstall it with the above commands.  Changes in this version:
+Introduced methods for calculating copy numbers from mouse scRNAseq data (to run mouse module, set genome="mm10" in the main function).  This version outputs single cell copy number results in gene by cell dimension.  Gene names are plotted in the bottom of heatmap.  Zooming into the heatmap to read gene names.
 
 ### Updates in V1.0.6.
 Two coordinate errors related to new hg20 contigs were fixed. 
-Added heatmap plot of single cell copy number results with gene by cell matrix; genenames are plotted in the heatmap in the PDF files. Zooming into the bottom of the heatmap to find gene names in each segment.  Due to the large file size, it could be slow. Default is: plot.genes="TRUE". Users can change it to plot.genes="FALSE" if genenames are not wanted.
+Added heatmap plot of single cell copy number results with gene by cell matrix; genenames are plotted in the heatmap in the PDF files. Zooming into the bottom of the heatmap to find gene names in each segment.  Due to the large file size, it could be slow. Default is: plot.genes="TRUE". Users can change it to plot.genes="FALSE" if gene names are not wanted.
 Added the filtered cells back to the prediction results
 Output the *.seg file, which can be loaded to IGV viewer to visualize the results directly.  default: output.seg="FALSE".  Users can change to:output.seg="TRUE". 
 
@@ -54,15 +54,17 @@ Here I do parallel computation by setting n.cores = 4. Default value is 1.
 
 I also give a sample name by setting sam.name="test". 
 
-One struggling and intesting observation is that none of one clustering method could fit all datasets. In this version, I add a distance parameters for clustering that include "euclidean" distannce and correlational distance, ie. 1-"pearson" and "spearman" similarity.  In general, corretional distances tend to favor noisy data, while euclidean distance tends to favor data with larger CN segments. 
+One struggling  observation is that none of one clustering method could fit all datasets. In this version, I add a distance parameters for clustering that include "euclidean" distance and correlational distance, ie. 1-"pearson" and "spearman" similarity.  In general, corretional distances tend to favor noisy data, while euclidean distance tends to favor data with larger CN segments. 
 
 I add an option to input known normal cell names as a vector object. Default is NULL.
 
-I add a mode for cell line data that has only aneuploid or diploid cells. Setting this cell line mode by cell.line="yes". Default for tissue samples is cell.line="no". This cell line mode uses systhetic baslines from the data variations, which does not represent the published algorithms. This cell line mode does not guarantine the success nor the accuracy.
+I add a mode for cell line data that has only aneuploid or diploid cells. Setting this cell line mode by cell.line="yes". Default for tissue samples is cell.line="no". This cell line mode uses synthetic basline from the data variations, which does not represent the published algorithm. This cell line mode does not guarantee the success nor the accuracy.
 
-I add an option to output seg file for visuliazation with IGV viewer. Default is output.seg="FALSE", change to output.seg= "TRUE" if seg file is wanted.
+I add an option to output seg file which can be directly loaded to IGV viewer for visualization. Default is output.seg="FALSE". Please change to output.seg= "TRUE" if seg file is wanted.
 
-I add an additional plot of single cell copy number results with gene by cell matrix.  This is by default, plot.genes="TRUE".
+I add an additional plot of single cell copy number results, using gene by cell matrix.  This is by default, plot.genes="TRUE". Gene names are labelled at the bottom of heatmap.  Need to zoom in to read the tiny fonts.
+
+Mouse scRNAseq is supported due to many requests.  I didn't have many mouse datasets to test the method yet. It is using the same method as human data.  Only difference is that the result is output in gene space instead of genomic space.  Meaning the locations of CNVs is labelled by gene names, instead of genomic positions.  Although aneuploid/diploid prediction was forced to execute, but users need to eyeball to check its accuracy.
 
 Now run the code:
 
@@ -71,9 +73,9 @@ library(copykat)
 copykat.test <- copykat(rawmat=exp.rawdata, id.type="S", ngene.chr=5, win.size=25, KS.cut=0.1, sam.name="test", distance="euclidean", norm.cell.names="",output.seg="FLASE", plot.genes="TRUE", genome="hg20",n.cores=1)
 ```
 
-It might take a while to run a dataset with more than 10,000 single cells. It is suggested to run large dataset in terminal using "Rscript", instead of running copykat in interactive mode in R/Rstudio. I usually run 'Rscript run_copycat.R' in sever and taking either 10X output or raw UMI count matrix as input using the args.
+It might take a while to run a dataset with more than 10,000 single cells. It is suggested to run one sample at a time.  Combining different sample would pick up batch effects between samples.
 
-After this step, copykat aumatically save the calculated copy number matrix, the heatmap and tumor/normal prediction results in my working directory.  I can also extract them from the object as follows:
+After this step, copykat automatically save the calculated copy number matrix, the heatmap and tumor/normal prediction results in my working directory.  Users can also extract them from the object.  Two examples as follows:
 
 ```{r, eval=TRUE}
 pred.test <- data.frame(copykat.test$prediction)
@@ -83,18 +85,20 @@ CNA.test <- data.frame(copykat.test$CNAmat)
 ## Step 4: navigate prediction results
 Now let's look at the prediction results. Predicted aneuploid cells are inferred as tumor cells; diploid cells are stromal normal cells.
 
-Please note that filtered cells are not included in the results. I am debatinng whether should I include all cells in the results.
+This version put back all filtered cells and label them as "not defined" cells.
 
 ```{r, eval=TRUE}
 head(pred.test)
      
 ```
-The first 3 columns in the CNA matrix are the genomic coordinates. Rows are 220KB bins in genomic orders.
+The first 3 columns in the CNV matrix are the genomic coordinates. Rows are 220KB bins in genomic orders.
+It also output CNVs indexed by gene names and other information such as chromosome names, start and end positions, G staining band etc.
+Mouse result only output the CNV results in gene name vy cell space.
 
 ```{r, eval=TRUE}
 head(CNA.test[ , 1:5])
 ```
-Copykat also generate a heatmap plot for estimated copy numbers. Rows are single cells; columns are 220kb bins in genomic order.
+Copykat generate a heatmap plot for estimated copy numbers. Rows are single cells; columns are 220kb bins in genomic order.
 
 ```{r, eval=TRUE, , echo=FALSE, fig.width=7, fig.height=7}
   my_palette <- colorRampPalette(rev(RColorBrewer::brewer.pal(n = 3, name = "RdBu")))(n = 999)

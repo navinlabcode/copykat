@@ -31,7 +31,7 @@ start_time <- Sys.time()
   set.seed(1234)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
-  print("running copykat v1.0.7 updated 02/24/2022 introduced mm10 module")
+  print("running copykat v1.0.8 updated 02/25/2022 introduced mm10 module, fixed typos")
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
 
@@ -63,8 +63,7 @@ start_time <- Sys.time()
   anno.mat <- annotateGenes.mm10(mat = rawmat, ID.type = id.type) #SYMBOL or ENSEMBLE
   dim(rawmat)
   }
-  anno.mat <- anno.mat[order(anno.mat$abspos, decreasing = FALSE),]
-
+  anno.mat <- anno.mat[order(as.numeric(anno.mat$abspos), decreasing = FALSE),]
 
 # print(paste(nrow(anno.mat)," genes annotated", sep=""))
 
@@ -676,6 +675,7 @@ start_time <- Sys.time()
 
     rownames(mat.adj) <- anno.mat2$mgi_symbol
     chrg <- as.numeric(anno.mat2$chromosome_name) %% 2+1
+    rle(as.numeric(anno.mat2$chromosome_name))
     rbPal1g <- colorRampPalette(c('black','grey'))
     CHRg <- rbPal1g(2)[as.numeric(chrg)]
     chr1g <- cbind(CHRg,CHRg)
@@ -773,4 +773,8 @@ start_time <- Sys.time()
 
   }
 }
+
+
+
+
 
