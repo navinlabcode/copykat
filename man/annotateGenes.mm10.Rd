@@ -2,9 +2,9 @@
 % Please edit documentation in R/annotateGenes.mm10.R
 \name{annotateGenes.mm10}
 \alias{annotateGenes.mm10}
-\title{annotate genes with reference to mm10.}
+\title{annotate genes with reference to hg38.}
 \usage{
-annotateGenes.mm10(mat, ID.type = "S")
+annotateGenes.mm10(mat, ID.type = "S", full.anno = full.anno.mm10)
 }
 \arguments{
 \item{mat}{data matrix; genes in rows; cell names in columns.}
@@ -20,5 +20,5 @@ annotations of each genes in rows with chrom and positions.
 annotate genes with reference to hg38.
 }
 \examples{
-test.anno.mat <- annotateGenes.mm10(mat=matx, ID.type="ENSEMBLE_id", full.anno = full.anno.mm10)
+test.anno.mat <- annotateGenes.hg20(mat=matx, ID.type="ENSEMBLE_id", full.anno = full.anno)
 }

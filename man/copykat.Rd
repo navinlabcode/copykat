@@ -17,6 +17,8 @@ copykat(
   sam.name = "",
   distance = "euclidean",
   output.seg = "FALSE",
+  plot.genes = "TRUE",
+  genome = "hg20",
   n.cores = 1
 )
 }
@@ -25,13 +27,13 @@ copykat(
 
 \item{id.type}{gene id type: Symbol or Ensemble.}
 
-\item{cell.line}{if the data are from pure cell line,put "yes"; if cellline data are a mixture of tumor and normal cells, still put "no".}
+\item{cell.line}{if the data are from pure cell line,put "yes"; if cell line data are a mixture of tumor and normal cells, still put "no".}
 
 \item{ngene.chr}{minimal number of genes per chromosome for cell filtering.}
 
-\item{LOW.DR}{minimal population fractoins of genes for smoothing.}
+\item{LOW.DR}{minimal population fractions of genes for smoothing.}
 
-\item{UP.DR}{minimal population fractoins of genes for segmentation.}
+\item{UP.DR}{minimal population fractions of genes for segmentation.}
 
 \item{win.size}{minimal window sizes for segmentation.}
 
@@ -41,9 +43,13 @@ copykat(
 
 \item{sam.name}{sample name.}
 
-\item{distance}{distance methods include euclidean, and correlation coverted distance include pearson and spearman.}
+\item{distance}{distance methods include euclidean, and correlation converted distance include pearson and spearman.}
 
-\item{output.seg}{TRUE or FALSE, output seg file for IGV visulization}
+\item{output.seg}{TRUE or FALSE, output seg file for IGV visualization}
+
+\item{plot.genes}{TRUE or FALSE, output heatmap of CNVs with genename labels}
+
+\item{genome}{hg20 or mm10, current version only work for human or mouse genes}
 
 \item{n.cores}{number of cores for parallel computing.}
 }
@@ -54,7 +60,7 @@ copykat(
 copycat main_func.
 }
 \examples{
-test.ck <- copykat(rawmat=rawdata, sam.name="test", n.cores=10)
+test.ck <- copykat(rawmat=rawdata,id.type="S", ngene.chr=5, win.size=25, KS.cut=0.1,sam.name="test", distance="euclidean", norm.cell.names="", n.cores=4, output.seg="FALSE")
 
 test.pred <- test.ck$prediction
 }
