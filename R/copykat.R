@@ -420,8 +420,8 @@ start_time <- Sys.time()
   print("step 9: saving results...")
 
   ##add back filtered cells as not defined in prediction results
-  '%!in%' <- function(x,y)!('%in%'(x,y))
-  ndef <- colnames(rawmat)[which(colnames(rawmat) %!in% names(com.preN)[1:290])]
+  '%!in%' <- function(x,y)!('%in%'(x,y))			   
+  ndef <- colnames(rawmat)[which(colnames(rawmat) %!in% names(com.preN))]
   if(length(ndef)>0){
     res <- data.frame(cbind(c(names(com.preN),ndef), c(com.preN, rep("not.defined",length(ndef)))))
     colnames(res) <- c("cell.names", "copykat.pred")
