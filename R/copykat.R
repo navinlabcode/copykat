@@ -31,7 +31,7 @@ start_time <- Sys.time()
   set.seed(1234)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
-  print("running copykat v1.0.8 updated 02/25/2022 introduced mm10 module, fixed typos")
+  print("running copykat v1.0.9 updated 09/21/2022 fixed indexing error in not.defined prediction")
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
 
