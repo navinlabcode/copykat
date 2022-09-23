@@ -16,13 +16,13 @@ detach("package:copykat")
 ``` 
 
 ### The current version is V1.1.0. Updated on Sep23, 2022
-###Changes in V1.1.0:
+### Changes in V1.1.0:
 Fixed issues in outputing 'not.defined' cells in final prediction table.
 
-###Changes in V1.0.8:
+### Changes in V1.0.8:
 Introduced methods for calculating copy numbers from mouse scRNAseq data (to run mouse module, set genome="mm10" in the main function).  This version outputs single cell copy number results in gene by cell dimension.  Gene names are plotted in the bottom of heatmap.  Zooming into the heatmap to read gene names.
 
-### Updates in V1.0.6.
+### Changes in V1.0.6.
 Two coordinate errors related to new hg20 contigs were fixed. 
 Added heatmap plot of single cell copy number results with gene by cell matrix; genenames are plotted in the heatmap in the PDF files. Zooming into the bottom of the heatmap to find gene names in each segment.  Due to the large file size, it could be slow. Default is: plot.genes="TRUE". Users can change it to plot.genes="FALSE" if gene names are not wanted.
 Added the filtered cells back to the prediction results
