@@ -31,7 +31,7 @@ start_time <- Sys.time()
   set.seed(1234)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
-  print("running copykat v1.0.8 updated 02/25/2022 introduced mm10 module, fixed typos")
+  print("running copykat v1.0.10")
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
 
@@ -421,7 +421,7 @@ start_time <- Sys.time()
 
   ##add back filtered cells as not defined in prediction results
   '%!in%' <- function(x,y)!('%in%'(x,y))
-  ndef <- colnames(rawmat)[which(colnames(rawmat) %!in% names(com.preN)[1:290])]
+  ndef <- colnames(rawmat)[which(colnames(rawmat) %!in% names(com.preN))]
   if(length(ndef)>0){
     res <- data.frame(cbind(c(names(com.preN),ndef), c(com.preN, rep("not.defined",length(ndef)))))
     colnames(res) <- c("cell.names", "copykat.pred")
