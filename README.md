@@ -8,8 +8,18 @@ Installing copykat from GitHub
 library(devtools)
 install_github("navinlabcode/copykat")
 ```
-### The current version is V1.0.8. Updated on Feb 25, 2022
-To update, please remove old version with remove.packages("copykat"), detach it with detach("package:copykat") and reinstall it with the above commands.  Changes in this version:
+
+To update between versions, please remove old version with the following codes and then reinstall it with the above codes. 
+```
+remove.packages("copykat")
+detach("package:copykat")
+``` 
+
+### The current version is V1.1.0. Updated on Sep23, 2022
+###Changes in V1.1.0:
+Fixed issues in outputing 'not.defined' cells in final prediction table.
+
+###Changes in V1.0.8:
 Introduced methods for calculating copy numbers from mouse scRNAseq data (to run mouse module, set genome="mm10" in the main function).  This version outputs single cell copy number results in gene by cell dimension.  Gene names are plotted in the bottom of heatmap.  Zooming into the heatmap to read gene names.
 
 ### Updates in V1.0.6.
