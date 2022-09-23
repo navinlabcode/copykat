@@ -31,7 +31,7 @@ start_time <- Sys.time()
   set.seed(1234)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
-  print("running copykat v1.0.10")
+  print("running copykat v1.1.0")
 
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
@@ -427,6 +427,9 @@ start_time <- Sys.time()
   if(length(ndef)>0){
     res <- data.frame(cbind(c(names(com.preN),ndef), c(com.preN, rep("not.defined",length(ndef)))))
     colnames(res) <- c("cell.names", "copykat.pred")
+  } else {
+    res <- data.frame(cbind(names(com.preN), com.preN))
+    colnames(res) <- c("cell.names", "copykat.pred")
   }
   ##end
   write.table(res, paste(sample.name, "prediction.txt",sep=""), sep="\t", row.names = FALSE, quote = FALSE)
@@ -663,6 +666,9 @@ start_time <- Sys.time()
     ndef <- colnames(rawmat)[which(colnames(rawmat) %!in% names(com.preN))]
     if(length(ndef)>0){
       res <- data.frame(cbind(c(names(com.preN),ndef), c(com.preN, rep("not.defined",length(ndef)))))
+      colnames(res) <- c("cell.names", "copykat.pred")
+    } else {
+      res <- data.frame(cbind(names(com.preN), com.preN))
       colnames(res) <- c("cell.names", "copykat.pred")
     }
     ##end
