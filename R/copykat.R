@@ -25,6 +25,7 @@
 #' @export
 ###
 
+
 copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW.DR=0.05, UP.DR=0.1, win.size=25, norm.cell.names="", KS.cut=0.1, sam.name="", distance="euclidean", output.seg="FALSE", plot.genes="TRUE", genome="hg20", n.cores=1){
 
 start_time <- Sys.time()
@@ -152,20 +153,20 @@ start_time <- Sys.time()
          if(km==2){
          break
          }
-        }
+         }
 
-    WNS <- "run with known normal"
-    preN <- norm.cell.names
-     ##relative expression using pred.normal cells
-  	norm.mat.relat <- norm.mat.smooth-basel
+        WNS <- "run with known normal"
+        preN <- norm.cell.names
+         ##relative expression using pred.normal cells
+      	norm.mat.relat <- norm.mat.smooth-basel
 
-  }else {
-      basa <- baseline.norm.cl(norm.mat.smooth=norm.mat.smooth, min.cells=5, n.cores=n.cores)
-      basel <- basa$basel
-      WNS <- basa$WNS
-      preN <- basa$preN
-      CL <- basa$cl
-      if (WNS =="unclassified.prediction"){
+        }else {
+         basa <- baseline.norm.cl(norm.mat.smooth=norm.mat.smooth, min.cells=5, n.cores=n.cores)
+          basel <- basa$basel
+          WNS <- basa$WNS
+          preN <- basa$preN
+          CL <- basa$cl
+          if (WNS =="unclassified.prediction"){
 
                     basa <- baseline.GMM(CNA.mat=norm.mat.smooth, max.normal=5, mu.cut=0.05, Nfraq.cut=0.99,RE.before=basa,n.cores=n.cores)
                     basel <-basa$basel
@@ -174,10 +175,10 @@ start_time <- Sys.time()
                     preN <- basa$preN
 
               }
-  ##relative expression using pred.normal cells
-  norm.mat.relat <- norm.mat.smooth-basel
+          ##relative expression using pred.normal cells
+             norm.mat.relat <- norm.mat.smooth-basel
 
-  }
+             }
 
   ###use a smaller set of genes to perform segmentation
   DR2 <- apply(rawmat3,1,function(x)(sum(x>0)))/ncol(rawmat3)
@@ -244,181 +245,182 @@ start_time <- Sys.time()
 
     if(cell.line=="yes"){
 
-          mat.adj <- data.matrix(Aj$RNA.adj[, 4:ncol(Aj$RNA.adj)])
-          write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "CNA_results.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
+               mat.adj <- data.matrix(Aj$RNA.adj[, 4:ncol(Aj$RNA.adj)])
+               write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "CNA_results.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
 
-          if(distance=="euclidean"){
-           hcc <- hclust(parallelDist::parDist(t(mat.adj),threads =n.cores, method = distance), method = "ward.D")
-          }else {
-             hcc <- hclust(as.dist(1-cor(mat.adj, method = distance)), method = "ward.D")
-               }
-
-
-          saveRDS(hcc, file = paste(sample.name,"clustering_results.rds",sep=""))
-
-          #plot heatmap
-          print("step 8: ploting heatmap ...")
-          my_palette <- colorRampPalette(rev(RColorBrewer::brewer.pal(n = 3, name = "RdBu")))(n = 999)
-
-          chr <- as.numeric(Aj$DNA.adj$chrom) %% 2+1
-          rbPal1 <- colorRampPalette(c('black','grey'))
-          CHR <- rbPal1(2)[as.numeric(chr)]
-          chr1 <- cbind(CHR,CHR)
+                if(distance=="euclidean"){
+                 hcc <- hclust(parallelDist::parDist(t(mat.adj),threads =n.cores, method = distance), method = "ward.D")
+                  }else {
+                 hcc <- hclust(as.dist(1-cor(mat.adj, method = distance)), method = "ward.D")
+                   }
 
 
-          if (ncol(mat.adj)< 3000){
-          h <- 10
-           } else {
-           h <- 15
-            }
+                  saveRDS(hcc, file = paste(sample.name,"clustering_results.rds",sep=""))
 
-           col_breaks = c(seq(-1,-0.4,length=50),seq(-0.4,-0.2,length=150),seq(-0.2,0.2,length=600),seq(0.2,0.4,length=150),seq(0.4, 1,length=50))
-          #library(parallelDist)
+                   #plot heatmap
+                   print("step 8: ploting heatmap ...")
+                  my_palette <- colorRampPalette(rev(RColorBrewer::brewer.pal(n = 3, name = "RdBu")))(n = 999)
 
-            if(distance=="euclidean"){
-            jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
-            heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),
-            ColSideColors=chr1,Colv=NA, Rowv=TRUE,
-            notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
-            keysize=1, density.info="none", trace="none",
-            cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
-            symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
-            dev.off()
-            ### add a step to plot out gene by cell matrix
-              if(plot.genes=="TRUE"){
-                dim(results.com)
-                rownames(results.com) <- anno.mat2$hgnc_symbol
-                chrg <- as.numeric(anno.mat2$chrom) %% 2+1
-                rbPal1g <- colorRampPalette(c('black','grey'))
-                CHRg <- rbPal1(2)[as.numeric(chrg)]
-                chr1g <- cbind(CHRg,CHRg)
+                   chr <- as.numeric(Aj$DNA.adj$chrom) %% 2+1
+                   rbPal1 <- colorRampPalette(c('black','grey'))
+                   CHR <- rbPal1(2)[as.numeric(chr)]
+                   chr1 <- cbind(CHR,CHR)
 
-                pdf(paste(sample.name,"with_genes_heatmap.pdf",sep=""), height=h*2.5, width=40)
-                heatmap.3(t(results.com),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),
+
+                   if (ncol(mat.adj)< 3000){
+                   h <- 10
+                   } else {
+                   h <- 15
+                     }
+
+                  col_breaks = c(seq(-1,-0.4,length=50),seq(-0.4,-0.2,length=150),seq(-0.2,0.2,length=600),seq(0.2,0.4,length=150),seq(0.4, 1,length=50))
+                  #library(parallelDist)
+
+                   if(distance=="euclidean"){
+                          jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
+                          heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),
+                          ColSideColors=chr1,Colv=NA, Rowv=TRUE,
+                          notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
+                          keysize=1, density.info="none", trace="none",
+                          cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
+                          symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
+                          dev.off()
+                          ### add a step to plot out gene by cell matrix
+                          if(plot.genes=="TRUE"){
+
+                          rownames(results.com) <- anno.mat2$hgnc_symbol
+                          chrg <- as.numeric(anno.mat2$chrom) %% 2+1
+                          rbPal1g <- colorRampPalette(c('black','grey'))
+                          CHRg <- rbPal1(2)[as.numeric(chrg)]
+                          chr1g <- cbind(CHRg,CHRg)
+
+                          pdf(paste(sample.name,"with_genes_heatmap.pdf",sep=""), height=h*2.5, width=40)
+                          heatmap.3(t(results.com),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),
                           ColSideColors=chr1g,Colv=NA, Rowv=TRUE,
                           notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
                           keysize=1, density.info="none", trace="none",
                           cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
                           symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
-                dev.off()
-              }
-              #end of ploting gene by cell matrix
+                          dev.off()
+                           }
+                         #end of ploting gene by cell matrix
 
-            } else {
-            jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
-            heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
-            ColSideColors=chr1,Colv=NA, Rowv=TRUE,
-            notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
-            keysize=1, density.info="none", trace="none",
-            cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
-            symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
-            dev.off()
-            ### add a step to plot out gene by cell matrix
-            if(plot.genes=="TRUE"){
-              dim(results.com)
-              rownames(results.com) <- anno.mat2$hgnc_symbol
-              chrg <- as.numeric(anno.mat2$chrom) %% 2+1
-              rbPal1g <- colorRampPalette(c('black','grey'))
-              CHRg <- rbPal1(2)[as.numeric(chrg)]
-              chr1g <- cbind(CHRg,CHRg)
+                } else {
+                          jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
+                          heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
+                          ColSideColors=chr1,Colv=NA, Rowv=TRUE,
+                          notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
+                          keysize=1, density.info="none", trace="none",
+                          cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
+                          symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
+                          dev.off()
+                           ### add a step to plot out gene by cell matrix
+             if(plot.genes=="TRUE"){
 
-              pdf(paste(sample.name,"with_genes_heatmap.pdf",sep=""), height=h*2.5, width=40)
-              heatmap.3(t(results.com),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
-                        ColSideColors=chr1g,Colv=NA, Rowv=TRUE,
-                        notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
-                        keysize=1, density.info="none", trace="none",
-                        cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
-                        symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
-              dev.off()
-              }
-            #end of ploting gene by cell matrix
-            }
+                          rownames(results.com) <- anno.mat2$hgnc_symbol
+                          chrg <- as.numeric(anno.mat2$chrom) %% 2+1
+                          rbPal1g <- colorRampPalette(c('black','grey'))
+                          CHRg <- rbPal1(2)[as.numeric(chrg)]
+                          chr1g <- cbind(CHRg,CHRg)
 
-           end_time<- Sys.time()
-           print(end_time -start_time)
+                          pdf(paste(sample.name,"with_genes_heatmap.pdf",sep=""), height=h*2.5, width=40)
+                          heatmap.3(t(results.com),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
+                          ColSideColors=chr1g,Colv=NA, Rowv=TRUE,
+                          notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
+                          keysize=1, density.info="none", trace="none",
+                          cexRow=0.1,cexCol=0.1,cex.main=1,cex.lab=0.1,
+                          symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
+                          dev.off()
+                          }
+                         #end of ploting gene by cell matrix
+                          }
 
-           reslts <- list(cbind(Aj$RNA.adj[, 1:3], mat.adj), hcc)
-           names(reslts) <- c("CNAmat","hclustering")
-           return(reslts)
+                          end_time<- Sys.time()
+                          print(end_time -start_time)
+
+                         reslts <- list(cbind(Aj$RNA.adj[, 1:3], mat.adj), hcc)
+                         names(reslts) <- c("CNAmat","hclustering")
+                         return(reslts)
     } else {
-      #start from here, not cell line data
+      ########## cell line mode ends here ####################
+
       #removed baseline adjustment
-  if(distance=="euclidean"){
-  hcc <- hclust(parallelDist::parDist(t(uber.mat.adj),threads =n.cores, method = distance), method = "ward.D")
-  }else {
-  hcc <- hclust(as.dist(1-cor(uber.mat.adj, method = distance)), method = "ward.D")
-  }
-  hc.umap <- cutree(hcc,2)
-  names(hc.umap) <- colnames(results.com)
+        if(distance=="euclidean"){
+        hcc <- hclust(parallelDist::parDist(t(uber.mat.adj),threads =n.cores, method = distance), method = "ward.D")
+        }else {
+        hcc <- hclust(as.dist(1-cor(uber.mat.adj, method = distance)), method = "ward.D")
+        }
+        hc.umap <- cutree(hcc,2)
+        names(hc.umap) <- colnames(results.com)
 
-  cl.ID <- NULL
-  for(i in 1:max(hc.umap)){
-    cli <- names(hc.umap)[which(hc.umap==i)]
-    pid <- length(intersect(cli, preN))/length(cli)
-    cl.ID <- c(cl.ID, pid)
-    i<- i+1
-  }
+        cl.ID <- NULL
+        for(i in 1:max(hc.umap)){
+        cli <- names(hc.umap)[which(hc.umap==i)]
+        pid <- length(intersect(cli, preN))/length(cli)
+        cl.ID <- c(cl.ID, pid)
+        i<- i+1
+         }
 
-  com.pred <- names(hc.umap)
-  com.pred[which(hc.umap == which(cl.ID==max(cl.ID)))] <- "diploid"
-  com.pred[which(hc.umap == which(cl.ID==min(cl.ID)))] <- "aneuploid"
-  names(com.pred) <- names(hc.umap)
+        com.pred <- names(hc.umap)
+        com.pred[which(hc.umap == which(cl.ID==max(cl.ID)))] <- "diploid"
+        com.pred[which(hc.umap == which(cl.ID==min(cl.ID)))] <- "aneuploid"
+        names(com.pred) <- names(hc.umap)
 
   ################removed baseline adjustment
-  results.com.rat <- uber.mat.adj-apply(uber.mat.adj[,which(com.pred=="diploid")], 1, mean)
-  results.com.rat <- apply(results.com.rat,2,function(x)(x <- x-mean(x)))
-  results.com.rat.norm <- results.com.rat[,which(com.pred=="diploid")]; dim(results.com.rat.norm)
+        results.com.rat <- uber.mat.adj-apply(uber.mat.adj[,which(com.pred=="diploid")], 1, mean)
+        results.com.rat <- apply(results.com.rat,2,function(x)(x <- x-mean(x)))
+        results.com.rat.norm <- results.com.rat[,which(com.pred=="diploid")]; dim(results.com.rat.norm)
 
-  cf.h <- apply(results.com.rat.norm, 1, sd)
-  base <- apply(results.com.rat.norm, 1, mean)
+        cf.h <- apply(results.com.rat.norm, 1, sd)
+        base <- apply(results.com.rat.norm, 1, mean)
 
-  adjN <- function(j){
-    a <- results.com.rat[, j]
-    a[abs(a-base) <= 0.25*cf.h] <- mean(a)
-    a
-  }
+        adjN <- function(j){
+        a <- results.com.rat[, j]
+        a[abs(a-base) <= 0.25*cf.h] <- mean(a)
+        a
+        }
 
 
-  mc.adjN <-  parallel::mclapply(1:ncol(results.com.rat),adjN, mc.cores = n.cores)
-  adj.results <- matrix(unlist(mc.adjN), ncol = ncol(results.com.rat), byrow = FALSE)
-  colnames(adj.results) <- colnames(results.com.rat)
+        mc.adjN <-  parallel::mclapply(1:ncol(results.com.rat),adjN, mc.cores = n.cores)
+        adj.results <- matrix(unlist(mc.adjN), ncol = ncol(results.com.rat), byrow = FALSE)
+        colnames(adj.results) <- colnames(results.com.rat)
 
-  #rang <- 0.5*(max(adj.results)-min(adj.results))
-  #mat.adj <- adj.results/rang
-  mat.adj <- t(t(adj.results)-apply(adj.results,2,mean))
+        #rang <- 0.5*(max(adj.results)-min(adj.results))
+        #mat.adj <- adj.results/rang
+        mat.adj <- t(t(adj.results)-apply(adj.results,2,mean))
 
-  print("step 8: final prediction ...")
+        print("step 8: final prediction ...")
 
-  if(distance=="euclidean"){
-    hcc <- hclust(parallelDist::parDist(t(mat.adj),threads =n.cores, method = distance), method = "ward.D")
-  }else {
-    hcc <- hclust(as.dist(1-cor(mat.adj, method = distance)), method = "ward.D")
-  }
+        if(distance=="euclidean"){
+         hcc <- hclust(parallelDist::parDist(t(mat.adj),threads =n.cores, method = distance), method = "ward.D")
+         }else {
+         hcc <- hclust(as.dist(1-cor(mat.adj, method = distance)), method = "ward.D")
+         }
 
-  hc.umap <- cutree(hcc,2)
-  names(hc.umap) <- colnames(results.com)
+         hc.umap <- cutree(hcc,2)
+         names(hc.umap) <- colnames(results.com)
 
-  saveRDS(hcc, file = paste(sample.name,"clustering_results.rds",sep=""))
+        saveRDS(hcc, file = paste(sample.name,"clustering_results.rds",sep=""))
 
-  cl.ID <- NULL
-  for(i in 1:max(hc.umap)){
-    cli <- names(hc.umap)[which(hc.umap==i)]
-    pid <- length(intersect(cli, preN))/length(cli)
-    cl.ID <- c(cl.ID, pid)
-    i<- i+1
-  }
+        cl.ID <- NULL
+        for(i in 1:max(hc.umap)){
+        cli <- names(hc.umap)[which(hc.umap==i)]
+        pid <- length(intersect(cli, preN))/length(cli)
+        cl.ID <- c(cl.ID, pid)
+        i<- i+1
+         }
 
-  com.preN <- names(hc.umap)
-  com.preN[which(hc.umap == which(cl.ID==max(cl.ID)))] <- "diploid"
-  com.preN[which(hc.umap == which(cl.ID==min(cl.ID)))] <- "aneuploid"
-  names(com.preN) <- names(hc.umap)
+        com.preN <- names(hc.umap)
+        com.preN[which(hc.umap == which(cl.ID==max(cl.ID)))] <- "diploid"
+        com.preN[which(hc.umap == which(cl.ID==min(cl.ID)))] <- "aneuploid"
+        names(com.preN) <- names(hc.umap)
 
-  if(WNS=="unclassified.prediction"){
-    com.preN[which(com.preN == "diploid")] <- "c1:diploid:low.conf"
-    com.preN[which(com.preN == "aneuploid")] <- "c2:aneuploid:low.conf"
-  }
+        if(WNS=="unclassified.prediction"){
+        com.preN[which(com.preN == "diploid")] <- "c1:diploid:low.conf"
+        com.preN[which(com.preN == "aneuploid")] <- "c2:aneuploid:low.conf"
+        }
 
-  print("step 9: saving results...")
+      print("step 9: saving results...")
 
   ##add back filtered cells as not defined in prediction results
   '%!in%' <- function(x,y)!('%in%'(x,y))
