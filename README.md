@@ -89,7 +89,7 @@ After this step, copykat automatically save the calculated copy number matrix, t
 
 ```{r, eval=TRUE}
 pred.test <- data.frame(copykat.test$prediction)
-pred.test <- pred.test[-which(pred.test$copykat.pred=="not.defined"),]  ##remove undefined cells
+pred.test <- pred.test[which(pred.test$copykat.pred %in% c("aneuploid","diploid")),]  ##keep defined cells
 CNA.test <- data.frame(copykat.test$CNAmat)
 ```
 
