@@ -18,7 +18,7 @@
 #' @return 1) aneuploid/diploid prediction results; 2) CNA results in 220KB windows; 3) heatmap; 4) hclustering object.
 #'
 #' @examples
-#' test.ck <- copykat(rawmat=rawdata,id.type="S", ngene.chr=5, win.size=25, KS.cut=0.1,sam.name="test", distance="euclidean", norm.cell.names="", n.cores=4, output.seg="FALSE")
+#' test.ck <- copykat(rawmat=rawdata,id.type="S", ngene.chr=5, win.size=25, KS.cut=0.1,sam.name="test", distance="euclidean", norm.cell.names="", n.cores=4, output.seg="FALSE",min.gene.per.cell=200)
 
 #'
 #' test.pred <- test.ck$prediction
@@ -39,10 +39,10 @@ start_time <- Sys.time()
 
   genes.raw <- apply(rawmat, 2, function(x)(sum(x>0)))
 
-  if(sum(genes.raw> 200)==0) stop("none cells have more than 200 genes")
-  if(sum(genes.raw<100)>1){
-    rawmat <- rawmat[, -which(genes.raw< 200)]
-    print(paste("filtered out ", sum(genes.raw<=200), " cells with less than 200 genes; remaining ", ncol(rawmat), " cells", sep=""))
+  if(sum(genes.raw> min.gene.per.cell)==0) stop("none cells have more than min.gene.per.cell")
+  if(sum(genes.raw<min.gene.per.cell)>1){
+    rawmat <- rawmat[, -which(genes.raw< min.gene.per.cell)]
+    print(paste("filtered out ", sum(genes.raw<=min.gene.per.cell), " cells with less than min.gene.per.cell; remaining ", ncol(rawmat), " cells", sep=""))
   }
   ##
   der<- apply(rawmat,1,function(x)(sum(x>0)))/ncol(rawmat)
