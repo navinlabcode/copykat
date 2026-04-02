@@ -23,6 +23,7 @@
 
 #'
 #' test.pred <- test.ck$prediction
+#' @importFrom Matrix colSums rowSums
 #' @export
 ###
 
@@ -38,7 +39,7 @@ start_time <- Sys.time()
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
 
-  genes.raw <- apply(rawmat, 2, function(x)(sum(x>0)))
+  genes.raw <- colSums(rawmat != 0)
 
   if(sum(genes.raw> min.gene.per.cell)==0) stop("none cells have more than min.gene.per.cell")
   if(sum(genes.raw<min.gene.per.cell)>1){
@@ -46,7 +47,7 @@ start_time <- Sys.time()
     print(paste("filtered out ", sum(genes.raw<=min.gene.per.cell), " cells with less than min.gene.per.cell; remaining ", ncol(rawmat), " cells", sep=""))
   }
   ##
-  der<- apply(rawmat,1,function(x)(sum(x>0)))/ncol(rawmat)
+  der <- rowSums(rawmat != 0)/ncol(rawmat)
 
   if(sum(der>LOW.DR)>=1){
     rawmat <- rawmat[which(der > LOW.DR), ]; print(paste(nrow(rawmat)," genes past LOW.DR filtering", sep=""))
@@ -61,66 +62,69 @@ start_time <- Sys.time()
 
   print("step 2: annotations gene coordinates ...")
   if(genome=="hg20"){
-  anno.mat <- annotateGenes.hg20(mat = rawmat, ID.type = id.type) #SYMBOL or ENSEMBLE
+  anno.list <- annotateGenes.hg20(mat = rawmat, ID.type = id.type) #SYMBOL or ENSEMBLE
   } else if(genome=="mm10"){
-  anno.mat <- annotateGenes.mm10(mat = rawmat, ID.type = id.type) #SYMBOL or ENSEMBLE
+  anno.list <- annotateGenes.mm10(mat = rawmat, ID.type = id.type) #SYMBOL or ENSEMBLE
   dim(rawmat)
   }
-  anno.mat <- anno.mat[order(as.numeric(anno.mat$abspos), decreasing = FALSE),]
+  ord <- order(as.numeric(anno.list$anno$abspos), decreasing = FALSE)
+  anno.list$anno   <- anno.list$anno[ord, ]
+  anno.list$counts <- anno.list$counts[ord, ]
 
-# print(paste(nrow(anno.mat)," genes annotated", sep=""))
+# print(paste(nrow(anno.list$anno)," genes annotated", sep=""))
 
   ### module 3 removing genes that are involved in cell cycling
 
   if(genome=="hg20"){
-  HLAs <- anno.mat$hgnc_symbol[grep("^HLA-", anno.mat$hgnc_symbol)]
-  toRev <- which(anno.mat$hgnc_symbol %in% c(as.vector(cyclegenes[[1]]), HLAs))
+  HLAs <- anno.list$anno$hgnc_symbol[grep("^HLA-", anno.list$anno$hgnc_symbol)]
+  toRev <- which(anno.list$anno$hgnc_symbol %in% c(as.vector(cyclegenes[[1]]), HLAs))
   if(length(toRev)>0){
-    anno.mat <- anno.mat[-toRev, ]
+    anno.list$anno   <- anno.list$anno[-toRev, ]
+    anno.list$counts <- anno.list$counts[-toRev, ]
   }
   }
-#  print(paste(nrow(anno.mat)," genes after rm cell cycle genes", sep=""))
+#  print(paste(nrow(anno.list$anno)," genes after rm cell cycle genes", sep=""))
   ### secondary filtering
-  ToRemov2 <- NULL
-  for(i in 8:ncol(anno.mat)){
-    cell <- cbind(anno.mat$chromosome_name, anno.mat[,i])
-    cell <- cell[cell[,2]!=0,]
-    if(length(as.numeric(cell))< 5){
-      rm <- colnames(anno.mat)[i]
-      ToRemov2 <- c(ToRemov2, rm)
-    } else if(length(rle(cell[,1])$length)<length(unique((anno.mat$chromosome_name)))|min(rle(cell[,1])$length)< ngene.chr){
-      rm <- colnames(anno.mat)[i]
-      ToRemov2 <- c(ToRemov2, rm)
+  chrom_vec <- anno.list$anno$chromosome_name
+  ToRemov2  <- character(0)
+  for(j in seq_len(ncol(anno.list$counts))) {
+    nz_idx <- which(anno.list$counts[, j] != 0)
+    if(length(nz_idx) < 5) {
+      ToRemov2 <- c(ToRemov2, colnames(anno.list$counts)[j])
+    } else {
+      chr_nz <- chrom_vec[nz_idx]
+      rl <- rle(chr_nz)
+      if(length(rl$lengths) < length(unique(chrom_vec)) || min(rl$lengths) < ngene.chr)
+        ToRemov2 <- c(ToRemov2, colnames(anno.list$counts)[j])
     }
-    i<- i+1
   }
 
-  if(length(ToRemov2)==(ncol(anno.mat)-7)) stop("all cells are filtered")
+  if(length(ToRemov2)==ncol(anno.list$counts)) stop("all cells are filtered")
   if(length(ToRemov2)>0){
-    anno.mat <-anno.mat[, -which(colnames(anno.mat) %in% ToRemov2)]
+    anno.list$counts <- anno.list$counts[, !(colnames(anno.list$counts) %in% ToRemov2), drop=FALSE]
   }
 
   # print(paste("filtered out ", length(ToRemov2), " cells with less than ",ngene.chr, " genes per chr", sep=""))
-  rawmat3 <- data.matrix(anno.mat[, 8:ncol(anno.mat)])
-  norm.mat<- log(sqrt(rawmat3)+sqrt(rawmat3+1))
-  norm.mat<- apply(norm.mat,2,function(x)(x <- x-mean(x)))
-  colnames(norm.mat) <-  colnames(rawmat3)
 
-  #print(paste("A total of ", ncol(norm.mat), " cells, ", nrow(norm.mat), " genes after preprocessing", sep=""))
+  ## compute DR2 from sparse counts before densification
+  DR2 <- rowSums(anno.list$counts != 0) / ncol(anno.list$counts)
 
-  ##smooth data
+  ##smooth data — normalize per-column to avoid building a full dense rawmat3/norm.mat
   print("step 3: smoothing data with dlm ...")
-  dlm.sm <- function(c){
+  dlm.sm <- function(j){
+    col_raw  <- as.numeric(anno.list$counts[, j])
+    col_norm <- log(sqrt(col_raw) + sqrt(col_raw + 1))
+    col_norm <- col_norm - mean(col_norm)
     model <- dlm::dlmModPoly(order=1, dV=0.16, dW=0.001)
-    x <- dlm::dlmSmooth(norm.mat[, c], model)$s
-    x<- x[2:length(x)]
-    x <- x-mean(x)
+    x <- dlm::dlmSmooth(col_norm, model)$s
+    x <- x[2:length(x)]
+    x - mean(x)
   }
 
-  test.mc <-parallel::mclapply(1:ncol(norm.mat), dlm.sm, mc.cores = n.cores)
-  norm.mat.smooth <- matrix(unlist(test.mc), ncol = ncol(norm.mat), byrow = FALSE)
+  test.mc <- parallel::mclapply(seq_len(ncol(anno.list$counts)), dlm.sm, mc.cores = n.cores)
+  norm.mat.smooth <- matrix(unlist(test.mc), ncol = ncol(anno.list$counts), byrow = FALSE)
 
-  colnames(norm.mat.smooth) <- colnames(norm.mat)
+  colnames(norm.mat.smooth) <- colnames(anno.list$counts)
 
   print("step 4: measuring baselines ...")
   if (cell.line=="yes"){
@@ -182,25 +186,29 @@ start_time <- Sys.time()
              }
 
   ###use a smaller set of genes to perform segmentation
-  DR2 <- apply(rawmat3,1,function(x)(sum(x>0)))/ncol(rawmat3)
+  ## DR2 was already computed from sparse counts before dlm smoothing
   ##relative expression using pred.normal cells
   norm.mat.relat <- norm.mat.relat[which(DR2>=UP.DR),]
 
   ###filter cells
-  anno.mat2 <- anno.mat[which(DR2>=UP.DR), ]
+  keep_rows2 <- which(DR2 >= UP.DR)
+  anno.mat2 <- list(
+    anno   = anno.list$anno[keep_rows2, ],
+    counts = anno.list$counts[keep_rows2, , drop=FALSE]
+  )
 
-  ToRemov3 <- NULL
-  for(i in 8:ncol(anno.mat2)){
-    cell <- cbind(anno.mat2$chromosome_name, anno.mat2[,i])
-    cell <- cell[cell[,2]!=0,]
-    if(length(as.numeric(cell))< 5){
-      rm <- colnames(anno.mat2)[i]
-      ToRemov3 <- c(ToRemov3, rm)
-    } else if(length(rle(cell[,1])$length)<length(unique((anno.mat$chromosome_name)))|min(rle(cell[,1])$length)< ngene.chr){
-      rm <- colnames(anno.mat2)[i]
-      ToRemov3 <- c(ToRemov3, rm)
+  chrom_vec2 <- anno.mat2$anno$chromosome_name
+  ToRemov3   <- character(0)
+  for(j in seq_len(ncol(anno.mat2$counts))) {
+    nz_idx <- which(anno.mat2$counts[, j] != 0)
+    if(length(nz_idx) < 5) {
+      ToRemov3 <- c(ToRemov3, colnames(anno.mat2$counts)[j])
+    } else {
+      chr_nz <- chrom_vec2[nz_idx]
+      rl <- rle(chr_nz)
+      if(length(rl$lengths) < length(unique(chrom_vec)) || min(rl$lengths) < ngene.chr)
+        ToRemov3 <- c(ToRemov3, colnames(anno.mat2$counts)[j])
     }
-    i<- i+1
   }
 
   if(length(ToRemov3)==ncol(norm.mat.relat)) stop ("all cells are filtered")
@@ -232,7 +240,7 @@ start_time <- Sys.time()
 
   colnames(results$logCNA) <- colnames(norm.mat.relat)
   results.com <- apply(results$logCNA,2, function(x)(x <- x-mean(x)))
-  RNA.copycat <- cbind(anno.mat2[, 1:7], results.com)
+  RNA.copycat <- cbind(anno.mat2$anno, results.com)
 
   write.table(RNA.copycat, paste(sample.name, "CNA_raw_results_gene_by_cell.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
 
@@ -289,8 +297,8 @@ start_time <- Sys.time()
                           ### add a step to plot out gene by cell matrix
                           if(plot.genes=="TRUE"){
 
-                          rownames(results.com) <- anno.mat2$hgnc_symbol
-                          chrg <- as.numeric(anno.mat2$chrom) %% 2+1
+                          rownames(results.com) <- anno.mat2$anno$hgnc_symbol
+                          chrg <- as.numeric(anno.mat2$anno$chrom) %% 2+1
                           rbPal1g <- colorRampPalette(c('black','grey'))
                           CHRg <- rbPal1(2)[as.numeric(chrg)]
                           chr1g <- cbind(CHRg,CHRg)
@@ -318,8 +326,8 @@ start_time <- Sys.time()
                            ### add a step to plot out gene by cell matrix
              if(plot.genes=="TRUE"){
 
-                          rownames(results.com) <- anno.mat2$hgnc_symbol
-                          chrg <- as.numeric(anno.mat2$chrom) %% 2+1
+                          rownames(results.com) <- anno.mat2$anno$hgnc_symbol
+                          chrg <- as.numeric(anno.mat2$anno$chrom) %% 2+1
                           rbPal1g <- colorRampPalette(c('black','grey'))
                           CHRg <- rbPal1(2)[as.numeric(chrg)]
                           chr1g <- cbind(CHRg,CHRg)
@@ -477,8 +485,8 @@ start_time <- Sys.time()
   ### add a step to plot out gene by cell matrix
   if(plot.genes=="TRUE"){
     dim(results.com)
-    rownames(results.com) <- anno.mat2$hgnc_symbol
-    chrg <- as.numeric(anno.mat2$chrom) %% 2+1
+    rownames(results.com) <- anno.mat2$anno$hgnc_symbol
+    chrg <- as.numeric(anno.mat2$anno$chrom) %% 2+1
     rbPal1g <- colorRampPalette(c('black','grey'))
     CHRg <- rbPal1(2)[as.numeric(chrg)]
     chr1g <- cbind(CHRg,CHRg)
@@ -511,8 +519,8 @@ start_time <- Sys.time()
     ### add a step to plot out gene by cell matrix
     if(plot.genes=="TRUE"){
       dim(results.com)
-      rownames(results.com) <- anno.mat2$hgnc_symbol
-      chrg <- as.numeric(anno.mat2$chrom) %% 2+1
+      rownames(results.com) <- anno.mat2$anno$hgnc_symbol
+      chrg <- as.numeric(anno.mat2$anno$chrom) %% 2+1
       rbPal1g <- colorRampPalette(c('black','grey'))
       CHRg <- rbPal1(2)[as.numeric(chrg)]
       chr1g <- cbind(CHRg,CHRg)
@@ -678,15 +686,15 @@ start_time <- Sys.time()
     write.table(res, paste(sample.name, "prediction.txt",sep=""), sep="\t", row.names = FALSE, quote = FALSE)
 
     ####save copycat CNA
-    write.table(cbind(anno.mat2[, 1:7], mat.adj), paste(sample.name, "CNA_results.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
+    write.table(cbind(anno.mat2$anno, mat.adj), paste(sample.name, "CNA_results.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
 
     ####%%%%%%%%%%%%%%%%%next heatmaps, subpopulations and tSNE overlay
     print("step 10: ploting heatmap ...")
     my_palette <- colorRampPalette(rev(RColorBrewer::brewer.pal(n = 3, name = "RdBu")))(n = 999)
 
-    rownames(mat.adj) <- anno.mat2$mgi_symbol
-    chrg <- as.numeric(anno.mat2$chromosome_name) %% 2+1
-    rle(as.numeric(anno.mat2$chromosome_name))
+    rownames(mat.adj) <- anno.mat2$anno$mgi_symbol
+    chrg <- as.numeric(anno.mat2$anno$chromosome_name) %% 2+1
+    rle(as.numeric(anno.mat2$anno$chromosome_name))
     rbPal1g <- colorRampPalette(c('black','grey'))
     CHRg <- rbPal1g(2)[as.numeric(chrg)]
     chr1g <- cbind(CHRg,CHRg)
@@ -734,7 +742,7 @@ start_time <- Sys.time()
     if(output.seg=="TRUE"){
       print("generating seg files for IGV viewer")
 
-      thisRatio <- cbind(anno.mat2[, c(2,3,1)], mat.adj)
+      thisRatio <- cbind(anno.mat2$anno[, c(2,3,1)], mat.adj)
       Short <- NULL
       chr <- rle(thisRatio$chromosome_name)[[2]]
 
@@ -778,7 +786,7 @@ start_time <- Sys.time()
     end_time<- Sys.time()
     print(end_time -start_time)
 
-    reslts <- list(res, cbind(anno.mat2[, 1:7], mat.adj), hcc)
+    reslts <- list(res, cbind(anno.mat2$anno, mat.adj), hcc)
     names(reslts) <- c("prediction", "CNAmat","hclustering")
     return(reslts)
 

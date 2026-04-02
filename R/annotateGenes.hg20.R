@@ -18,7 +18,7 @@ annotateGenes.hg20 <- function(mat, ID.type="S"){
     anno <- full.anno[which(as.vector(full.anno$ensembl_gene_id) %in% shar),]
     anno <- anno[!duplicated(anno$hgnc_symbol),]
     anno <- anno[order(match(anno$ensembl_gene_id, rownames(mat))),]
-    data <- cbind(anno, mat)
+    list(anno = anno, counts = mat)
 
   }else if(substring(ID.type,1,1) %in% c("S", "s")) {
 
@@ -27,7 +27,7 @@ annotateGenes.hg20 <- function(mat, ID.type="S"){
     anno <- full.anno[which(as.vector(full.anno$hgnc_symbol) %in% shar),]
     anno <- anno[!duplicated(anno$hgnc_symbol),]
     anno <- anno[order(match(anno$hgnc_symbol, rownames(mat))),]
-    data <- cbind(anno, mat)
+    list(anno = anno, counts = mat)
   }
 }
 

@@ -20,7 +20,7 @@ annotateGenes.mm10 <- function(mat, ID.type="S", full.anno=full.anno.mm10){
     anno <- full.anno[which(as.vector(full.anno$ensembl_gene_id) %in% shar),]
     anno <- anno[!duplicated(anno$mgi_symbol),]
     anno <- anno[order(match(anno$ensembl_gene_id, rownames(mat))),]
-    data <- cbind(anno, mat)
+    list(anno = anno, counts = mat)
 
   }else if(substring(ID.type,1,1) %in% c("S", "s")) {
 
@@ -32,7 +32,7 @@ annotateGenes.mm10 <- function(mat, ID.type="S", full.anno=full.anno.mm10){
     anno <- full.anno[which(as.vector(full.anno$mgi_symbol) %in% shar),]
     anno <- anno[!duplicated(anno$mgi_symbol),]
     anno <- anno[order(match(anno$mgi_symbol, rownames(mat))),]
-    data <- cbind(anno, mat)
+    list(anno = anno, counts = mat)
   }
 }
 
