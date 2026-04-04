@@ -16,8 +16,9 @@ Imports:
 	RColorBrewer,
 	mixtools,
 	cluster,
-	MCMCpack
-RoxygenNote: 7.1.2
+	MCMCpack,
+	Matrix
+RoxygenNote: 7.3.3
 Suggests: 
     knitr,
     rmarkdown
