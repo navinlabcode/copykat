@@ -15,10 +15,11 @@
 #' @param output.seg TRUE or FALSE, output seg file for IGV visualization
 #' @param plot.genes TRUE or FALSE, output heatmap of CNVs with genename labels
 #' @param genome hg20 or mm10, current version only work for human or mouse genes
+#' @param min.gene.per.cell, default 200
 #' @return 1) aneuploid/diploid prediction results; 2) CNA results in 220KB windows; 3) heatmap; 4) hclustering object.
 #'
 #' @examples
-#' test.ck <- copykat(rawmat=rawdata,id.type="S", ngene.chr=5, win.size=25, KS.cut=0.1,sam.name="test", distance="euclidean", norm.cell.names="", n.cores=4, output.seg="FALSE")
+#' test.ck <- copykat(rawmat=rawdata,id.type="S", ngene.chr=5, win.size=25, KS.cut=0.1,sam.name="test", distance="euclidean", norm.cell.names="", n.cores=4, output.seg="FALSE", min.gene.per.cell=200)
 
 #'
 #' test.pred <- test.ck$prediction
@@ -26,9 +27,7 @@
 ###
 
 
-copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5, LOW.DR=0.05, UP.DR=0.1, win.size=25,
-                    norm.cell.names="", KS.cut=0.1, sam.name="", distance="euclidean", output.seg="FALSE",
-                    plot.genes="TRUE", genome="hg20", n.cores=1){
+copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min.gene.per.cell=200, LOW.DR=0.05, UP.DR=0.1, win.size=25, norm.cell.names="", KS.cut=0.1, sam.name="", distance="euclidean", output.seg="FALSE", plot.genes="TRUE", genome="hg20", n.cores=1){
 
   start_time <- Sys.time()
   set.seed(1234)
@@ -41,10 +40,10 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5, LO
 
   genes.raw <- apply(rawmat, 2, function(x)(sum(x>0)))
 
-  if(sum(genes.raw> 200)==0) stop("none cells have more than 200 genes")
-  if(sum(genes.raw<100)>1){
-    rawmat <- rawmat[, -which(genes.raw< 200)]
-    print(paste("filtered out ", sum(genes.raw<=200), " cells with less than 200 genes; remaining ", ncol(rawmat), " cells", sep=""))
+  if(sum(genes.raw> min.gene.per.cell)==0) stop("none cells have more than min.gene.per.cell")
+  if(sum(genes.raw<min.gene.per.cell)>1){
+    rawmat <- rawmat[, -which(genes.raw< min.gene.per.cell)]
+    print(paste("filtered out ", sum(genes.raw<=min.gene.per.cell), " cells with less than min.gene.per.cell; remaining ", ncol(rawmat), " cells", sep=""))
   }
   ##
   der<- apply(rawmat,1,function(x)(sum(x>0)))/ncol(rawmat)
