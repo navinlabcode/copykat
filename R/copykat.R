@@ -1,8 +1,8 @@
 #' copycat main_func.
 #'
 #' @param rawmat raw data matrix; genes in rows; cell names in columns.
-#' @param  id.type gene id type: Symbol or Ensemble.
-#' @param  cell.line if the data are from pure cell line,put "yes"; if cell line data are a mixture of tumor and normal cells, still put "no".
+#' @param id.type gene id type: Symbol or Ensemble.
+#' @param cell.line if the data are from pure cell line,put "yes"; if cell line data are a mixture of tumor and normal cells, still put "no".
 #' @param LOW.DR minimal population fractions of genes for smoothing.
 #' @param UP.DR minimal population fractions of genes for segmentation.
 #' @param win.size minimal window sizes for segmentation.
@@ -26,13 +26,15 @@
 ###
 
 
-copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,LOW.DR=0.05, UP.DR=0.1, win.size=25, norm.cell.names="", KS.cut=0.1, sam.name="", distance="euclidean", output.seg="FALSE", plot.genes="TRUE", genome="hg20", n.cores=1){
+copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5, LOW.DR=0.05, UP.DR=0.1, win.size=25,
+                    norm.cell.names="", KS.cut=0.1, sam.name="", distance="euclidean", output.seg="FALSE",
+                    plot.genes="TRUE", genome="hg20", n.cores=1){
 
-start_time <- Sys.time()
+  start_time <- Sys.time()
   set.seed(1234)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
-  print("running copykat v1.1.0")
+  print("running copykat v1.2.0")
 
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
@@ -67,7 +69,7 @@ start_time <- Sys.time()
   }
   anno.mat <- anno.mat[order(as.numeric(anno.mat$abspos), decreasing = FALSE),]
 
-# print(paste(nrow(anno.mat)," genes annotated", sep=""))
+  # print(paste(nrow(anno.mat)," genes annotated", sep=""))
 
   ### module 3 removing genes that are involved in cell cycling
 
@@ -78,7 +80,9 @@ start_time <- Sys.time()
     anno.mat <- anno.mat[-toRev, ]
   }
   }
+
 #  print(paste(nrow(anno.mat)," genes after rm cell cycle genes", sep=""))
+
   ### secondary filtering
   ToRemov2 <- NULL
   for(i in 8:ncol(anno.mat)){
@@ -100,6 +104,7 @@ start_time <- Sys.time()
   }
 
   # print(paste("filtered out ", length(ToRemov2), " cells with less than ",ngene.chr, " genes per chr", sep=""))
+
   rawmat3 <- data.matrix(anno.mat[, 8:ncol(anno.mat)])
   norm.mat<- log(sqrt(rawmat3)+sqrt(rawmat3+1))
   norm.mat<- apply(norm.mat,2,function(x)(x <- x-mean(x)))
@@ -116,9 +121,8 @@ start_time <- Sys.time()
     x <- x-mean(x)
   }
 
-  test.mc <-parallel::mclapply(1:ncol(norm.mat), dlm.sm, mc.cores = n.cores)
+  test.mc <- parallel::mclapply(1:ncol(norm.mat), dlm.sm, mc.cores = n.cores)
   norm.mat.smooth <- matrix(unlist(test.mc), ncol = ncol(norm.mat), byrow = FALSE)
-
   colnames(norm.mat.smooth) <- colnames(norm.mat)
 
   print("step 4: measuring baselines ...")
@@ -141,15 +145,15 @@ start_time <- Sys.time()
 
          basel <- apply(norm.mat.smooth[, which(colnames(norm.mat.smooth) %in% norm.cell.names)],1,median); print("baseline is from known input")
 
-          d <- parallelDist::parDist(t(norm.mat.smooth),threads =n.cores, method="euclidean") ##use smooth and segmented data to detect intra-normal cells
+         d <- parallelDist::parDist(t(norm.mat.smooth),threads =n.cores, method="euclidean") ##use smooth and segmented data to detect intra-normal cells
 
-          km <- 6
-          fit <- hclust(d, method="ward.D2")
-           CL <- cutree(fit, km)
+         km <- 6
+         fit <- hclust(d, method="ward.D2")
+         CL <- cutree(fit, km)
 
-           while(!all(table(CL)>5)){
-          km <- km -1
-          CL <- cutree(fit, k=km)
+         while(!all(table(CL)>5)){
+         km <- km -1
+         CL <- cutree(fit, k=km)
          if(km==2){
          break
          }
@@ -161,7 +165,7 @@ start_time <- Sys.time()
       	norm.mat.relat <- norm.mat.smooth-basel
 
         }else {
-         basa <- baseline.norm.cl(norm.mat.smooth=norm.mat.smooth, min.cells=5, n.cores=n.cores)
+          basa <- baseline.norm.cl(norm.mat.smooth=norm.mat.smooth, min.cells=5, n.cores=n.cores)
           basel <- basa$basel
           WNS <- basa$WNS
           preN <- basa$preN
@@ -235,37 +239,36 @@ start_time <- Sys.time()
 
   write.table(RNA.copycat, paste(sample.name, "CNA_raw_results_gene_by_cell.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
 
+  ##
   if(genome=="hg20"){
-  print("step 6: convert to genomic bins...") ###need multi-core
+  print("step 6: convert to genomic bins...") ###need multi-core, time consuming step
   Aj <- convert.all.bins.hg20(DNA.mat = DNA.hg20, RNA.mat=RNA.copycat, n.cores = n.cores)
 
   uber.mat.adj <- data.matrix(Aj$RNA.adj[, 4:ncol(Aj$RNA.adj)])
 
-  print("step 7: adjust baseline ...")
+  print("step 7: re-adjust baseline ...")
 
     if(cell.line=="yes"){
 
-               mat.adj <- data.matrix(Aj$RNA.adj[, 4:ncol(Aj$RNA.adj)])
-               write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "CNA_results.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
+                   mat.adj <- data.matrix(Aj$RNA.adj[, 4:ncol(Aj$RNA.adj)])
+                   write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "CNA_results.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
 
-                if(distance=="euclidean"){
-                 hcc <- hclust(parallelDist::parDist(t(mat.adj),threads =n.cores, method = distance), method = "ward.D")
-                  }else {
-                 hcc <- hclust(as.dist(1-cor(mat.adj, method = distance)), method = "ward.D")
-                   }
-
+                   if(distance=="euclidean"){
+                    hcc <- hclust(parallelDist::parDist(t(mat.adj),threads =n.cores, method = distance), method = "ward.D")
+                     }else {
+                    hcc <- hclust(as.dist(1-cor(mat.adj, method = distance)), method = "ward.D")
+                     }
 
                   saveRDS(hcc, file = paste(sample.name,"clustering_results.rds",sep=""))
 
                    #plot heatmap
                    print("step 8: ploting heatmap ...")
-                  my_palette <- colorRampPalette(rev(RColorBrewer::brewer.pal(n = 3, name = "RdBu")))(n = 999)
+                    my_palette <- colorRampPalette(rev(RColorBrewer::brewer.pal(n = 3, name = "RdBu")))(n = 999)
 
                    chr <- as.numeric(Aj$DNA.adj$chrom) %% 2+1
                    rbPal1 <- colorRampPalette(c('black','grey'))
                    CHR <- rbPal1(2)[as.numeric(chr)]
                    chr1 <- cbind(CHR,CHR)
-
 
                    if (ncol(mat.adj)< 3000){
                    h <- 10
@@ -315,7 +318,7 @@ start_time <- Sys.time()
                           symm=F,symkey=F,symbreaks=T,cex=1, main=paste(WNS1,"; ",WNS, sep=""), cex.main=4, margins=c(10,10))
                           dev.off()
                            ### add a step to plot out gene by cell matrix
-             if(plot.genes=="TRUE"){
+                 if(plot.genes=="TRUE"){
 
                           rownames(results.com) <- anno.mat2$hgnc_symbol
                           chrg <- as.numeric(anno.mat2$chrom) %% 2+1
@@ -344,27 +347,68 @@ start_time <- Sys.time()
     } else {
       ########## cell line mode ends here ####################
 
-      #removed baseline adjustment
+       #removed baseline adjustment
         if(distance=="euclidean"){
         hcc <- hclust(parallelDist::parDist(t(uber.mat.adj),threads =n.cores, method = distance), method = "ward.D")
         }else {
         hcc <- hclust(as.dist(1-cor(uber.mat.adj, method = distance)), method = "ward.D")
         }
-        hc.umap <- cutree(hcc,2)
+
+        ### new change in v1.2.0 end
+        ## Loop backwards from 10 clusters down to 2 to find the highest k that has more than 2 cells
+        final_k <- NULL
+
+        for (k in 10:2) {
+          temp_clusters <- cutree(hcc, k = k)
+          min_size <- min(table(temp_clusters))
+          if (min_size > 2) {
+            final_k <- k
+            clusters <- temp_clusters
+            break
+          }
+        }
+
+        hc.umap <- cutree(hcc,final_k)
         names(hc.umap) <- colnames(results.com)
 
+        #decide on most confident groups
         cl.ID <- NULL
         for(i in 1:max(hc.umap)){
-        cli <- names(hc.umap)[which(hc.umap==i)]
-        pid <- length(intersect(cli, preN))/length(cli)
-        cl.ID <- c(cl.ID, pid)
-        i<- i+1
-         }
+          cli <- names(hc.umap)[which(hc.umap==i)]
+          pid <- length(intersect(cli, preN))/length(preN) #change length(cli) to be length(preN) in v1.2.0
+          cl.ID <- c(cl.ID, pid)
+          i<- i+1
+        }
 
-        com.pred <- names(hc.umap)
-        com.pred[which(hc.umap == which(cl.ID==max(cl.ID)))] <- "diploid"
-        com.pred[which(hc.umap == which(cl.ID==min(cl.ID)))] <- "aneuploid"
-        names(com.pred) <- names(hc.umap)
+        #confident diploid cluster
+        cl.diploid <- which(cl.ID==max(cl.ID))
+        cl.aneuploid  <- which(cl.ID==min(cl.ID))
+        conses.diploid <- apply(mat.adj[,which(hc.umap ==cl.diploid)], 1, median)
+        conses.aneuploid <- apply(mat.adj[,which(hc.umap ==cl.aneuploid)], 1, median)
+
+        #assign
+        com.preN <- names(hc.umap)
+
+        if(cor(conses.diploid,conses.aneuploid)>0.6){ # take empircal cuoff
+          com.preN[1:length(com.preN)] <- "diploid"
+        } else{
+          for (i in 1:max(hc.umap)){
+            conses <- apply(mat.adj[,which(hc.umap ==i)], 1, median)
+            if(cor(conses,consenses.diploid) > cor(conses,consenses.aneuploid)){
+              com.preN[which(hc.umap == i)] <- "diploid"
+            }else{
+              com.preN[which(hc.umap == i)] <- "aneuploid"
+            }
+
+          }
+
+        }
+
+        names(com.preN) <- names(hc.umap)
+        if(cor(conses.diploid,conses.aneuploid)>=0.4 & cor(conses.diploid,conses.aneuploid)<0.6){
+          WNS=="unclassified.prediction"
+        }
+        ### new change in v1.2.0 end
 
   ################removed baseline adjustment
         results.com.rat <- uber.mat.adj-apply(uber.mat.adj[,which(com.pred=="diploid")], 1, mean)
@@ -397,30 +441,71 @@ start_time <- Sys.time()
          hcc <- hclust(as.dist(1-cor(mat.adj, method = distance)), method = "ward.D")
          }
 
-         hc.umap <- cutree(hcc,2)
-         names(hc.umap) <- colnames(results.com)
-
         saveRDS(hcc, file = paste(sample.name,"clustering_results.rds",sep=""))
 
+        ### new change in v1.2.0 end
+        ## Loop backwards from 10 clusters down to 2 to find the highest k that has more than 2 cells
+        final_k <- NULL
+
+        for (k in 10:2) {
+          temp_clusters <- cutree(hcc, k = k)
+          min_size <- min(table(temp_clusters))
+          if (min_size > 2) {
+            final_k <- k
+            clusters <- temp_clusters
+            break
+          }
+        }
+
+        hc.umap <- cutree(hcc,final_k)
+        names(hc.umap) <- colnames(results.com)
+
+        #decide on most confident groups
         cl.ID <- NULL
         for(i in 1:max(hc.umap)){
-        cli <- names(hc.umap)[which(hc.umap==i)]
-        pid <- length(intersect(cli, preN))/length(cli)
-        cl.ID <- c(cl.ID, pid)
-        i<- i+1
-         }
+          cli <- names(hc.umap)[which(hc.umap==i)]
+          pid <- length(intersect(cli, preN))/length(preN) #change length(cli) to be length(preN) in v1.2.0
+          cl.ID <- c(cl.ID, pid)
+          i<- i+1
+        }
 
+        #confident diploid cluster
+        cl.diploid <- which(cl.ID==max(cl.ID))
+        cl.aneuploid  <- which(cl.ID==min(cl.ID))
+        conses.diploid <- apply(mat.adj[,which(hc.umap ==cl.diploid)], 1, median)
+        conses.aneuploid <- apply(mat.adj[,which(hc.umap ==cl.aneuploid)], 1, median)
+
+        #assign
         com.preN <- names(hc.umap)
-        com.preN[which(hc.umap == which(cl.ID==max(cl.ID)))] <- "diploid"
-        com.preN[which(hc.umap == which(cl.ID==min(cl.ID)))] <- "aneuploid"
+
+        if(cor(conses.diploid,conses.aneuploid)>=0.6){ # take empircal cuoff
+          com.preN[1:length(com.preN)] <- "diploid"
+        } else{
+          for (i in 1:max(hc.umap)){
+            conses <- apply(mat.adj[,which(hc.umap ==i)], 1, median)
+            if(cor(conses,consenses.diploid) > cor(conses,consenses.aneuploid)){
+              com.preN[which(hc.umap == i)] <- "diploid"
+            }else{
+              com.preN[which(hc.umap == i)] <- "aneuploid"
+            }
+
+          }
+
+        }
+
         names(com.preN) <- names(hc.umap)
+
+        if(cor(conses.diploid,conses.aneuploid)>=0.4 & cor(conses.diploid,conses.aneuploid)<0.6){
+          WNS=="unclassified.prediction"
+        }
+        ### new change in v1.2.0 end
 
         if(WNS=="unclassified.prediction"){
         com.preN[which(com.preN == "diploid")] <- "c1:diploid:low.conf"
         com.preN[which(com.preN == "aneuploid")] <- "c2:aneuploid:low.conf"
         }
 
-      print("step 9: saving results...")
+        print("step 9: saving results...")
 
   ##add back filtered cells as not defined in prediction results
   '%!in%' <- function(x,y)!('%in%'(x,y))
@@ -590,21 +675,63 @@ start_time <- Sys.time()
     }else {
       hcc <- hclust(as.dist(1-cor(uber.mat.adj, method = distance)), method = "ward.D")
     }
-    hc.umap <- cutree(hcc,2)
+    ### new change in v1.2.0 end
+    ## Loop backwards from 10 clusters down to 2 to find the highest k that has more than 2 cells
+    final_k <- NULL
+
+    for (k in 10:2) {
+      temp_clusters <- cutree(hcc, k = k)
+      min_size <- min(table(temp_clusters))
+      if (min_size > 2) {
+        final_k <- k
+        clusters <- temp_clusters
+        break
+      }
+    }
+
+    hc.umap <- cutree(hcc,final_k)
     names(hc.umap) <- colnames(results.com)
 
+    #decide on most confident groups
     cl.ID <- NULL
     for(i in 1:max(hc.umap)){
       cli <- names(hc.umap)[which(hc.umap==i)]
-      pid <- length(intersect(cli, preN))/length(cli)
+      pid <- length(intersect(cli, preN))/length(preN) #change length(cli) to be length(preN) in v1.2.0
       cl.ID <- c(cl.ID, pid)
       i<- i+1
     }
 
-    com.pred <- names(hc.umap)
-    com.pred[which(hc.umap == which(cl.ID==max(cl.ID)))] <- "diploid"
-    com.pred[which(hc.umap == which(cl.ID==min(cl.ID)))] <- "aneuploid"
-    names(com.pred) <- names(hc.umap)
+    #confident diploid cluster
+    cl.diploid <- which(cl.ID==max(cl.ID))
+    cl.aneuploid  <- which(cl.ID==min(cl.ID))
+    conses.diploid <- apply(mat.adj[,which(hc.umap ==cl.diploid)], 1, median)
+    conses.aneuploid <- apply(mat.adj[,which(hc.umap ==cl.aneuploid)], 1, median)
+
+    #assign
+    com.preN <- names(hc.umap)
+
+    if(cor(conses.diploid,conses.aneuploid)>0.6){ # take empircal cuoff
+      com.preN[1:length(com.preN)] <- "diploid"
+    } else{
+      for (i in 1:max(hc.umap)){
+        conses <- apply(mat.adj[,which(hc.umap ==i)], 1, median)
+        if(cor(conses,consenses.diploid) > cor(conses,consenses.aneuploid)){
+          com.preN[which(hc.umap == i)] <- "diploid"
+        }else{
+          com.preN[which(hc.umap == i)] <- "aneuploid"
+        }
+
+      }
+
+    }
+
+    names(com.preN) <- names(hc.umap)
+
+    if(cor(conses.diploid,conses.aneuploid)>=0.4 & cor(conses.diploid,conses.aneuploid)<0.6){
+      WNS=="unclassified.prediction"
+    }
+
+    ### new change in v1.2.0 end
 
     ################removed baseline adjustment
     results.com.rat <- uber.mat.adj-apply(uber.mat.adj[,which(com.pred=="diploid")], 1, mean)
@@ -638,24 +765,65 @@ start_time <- Sys.time()
       hcc <- hclust(as.dist(1-cor(mat.adj, method = distance)), method = "ward.D")
     }
 
-    hc.umap <- cutree(hcc,2)
-    names(hc.umap) <- colnames(results.com)
-
     saveRDS(hcc, file = paste(sample.name,"clustering_results.rds",sep=""))
 
+    ### new change in v1.2.0 end
+    ## Loop backwards from 10 clusters down to 2 to find the highest k that has more than 2 cells
+    final_k <- NULL
+
+    for (k in 10:2) {
+      temp_clusters <- cutree(hcc, k = k)
+      min_size <- min(table(temp_clusters))
+      if (min_size > 2) {
+        final_k <- k
+        clusters <- temp_clusters
+        break
+      }
+    }
+
+    hc.umap <- cutree(hcc,final_k)
+    names(hc.umap) <- colnames(results.com)
+
+    #decide on most confident groups
     cl.ID <- NULL
     for(i in 1:max(hc.umap)){
       cli <- names(hc.umap)[which(hc.umap==i)]
-      pid <- length(intersect(cli, preN))/length(cli)
+      pid <- length(intersect(cli, preN))/length(preN) #change length(cli) to be length(preN) in v1.2.0
       cl.ID <- c(cl.ID, pid)
       i<- i+1
     }
 
+    #confident diploid cluster
+    cl.diploid <- which(cl.ID==max(cl.ID))
+    cl.aneuploid  <- which(cl.ID==min(cl.ID))
+    conses.diploid <- apply(mat.adj[,which(hc.umap ==cl.diploid)], 1, median)
+    conses.aneuploid <- apply(mat.adj[,which(hc.umap ==cl.aneuploid)], 1, median)
+
+    #assign
     com.preN <- names(hc.umap)
-    com.preN[which(hc.umap == which(cl.ID==max(cl.ID)))] <- "diploid"
-    com.preN[which(hc.umap == which(cl.ID==min(cl.ID)))] <- "aneuploid"
+
+    if(cor(conses.diploid,conses.aneuploid)>0.6){ # take empirical cutoff
+      com.preN[1:length(com.preN)] <- "diploid"
+    } else{
+      for (i in 1:max(hc.umap)){
+        conses <- apply(mat.adj[,which(hc.umap ==i)], 1, median)
+        if(cor(conses,consenses.diploid) > cor(conses,consenses.aneuploid)){
+          com.preN[which(hc.umap == i)] <- "diploid"
+        }else{
+          com.preN[which(hc.umap == i)] <- "aneuploid"
+        }
+
+      }
+
+    }
+
     names(com.preN) <- names(hc.umap)
 
+    if(cor(conses.diploid,conses.aneuploid)>=0.4 & cor(conses.diploid,conses.aneuploid)<0.6){
+      WNS=="unclassified.prediction"
+    }
+
+### new change in v1.2.0 end
     if(WNS=="unclassified.prediction"){
       com.preN[which(com.preN == "diploid")] <- "c1:diploid:low.conf"
       com.preN[which(com.preN == "aneuploid")] <- "c2:aneuploid:low.conf"
