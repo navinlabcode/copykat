@@ -357,7 +357,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
         ## Loop backwards from 10 clusters down to 2 to find the highest k that has more than 2 cells
         final_k <- NULL
 
-        for (k in 10:2) {
+        for (k in 4:2) {
           temp_clusters <- cutree(hcc, k = k)
           min_size <- min(table(temp_clusters))
           if (min_size > 2) {
@@ -445,7 +445,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
         ## Loop backwards from 10 clusters down to 2 to find the highest k that has more than 2 cells
         final_k <- NULL
 
-        for (k in 10:2) {
+        for (k in 4:2) {
           temp_clusters <- cutree(hcc, k = k)
           min_size <- min(table(temp_clusters))
           if (min_size > 2) {
@@ -683,7 +683,7 @@ table(hc.umap, com.preN)
     ## Loop backwards from 10 clusters down to 2 to find the highest k that has more than 2 cells
     final_k <- NULL
 
-    for (k in 10:2) {
+    for (k in 4:2) {
       temp_clusters <- cutree(hcc, k = k)
       min_size <- min(table(temp_clusters))
       if (min_size > 2) {
@@ -775,7 +775,7 @@ table(hc.umap, com.preN)
     ## Loop backwards from 10 clusters down to 2 to find the highest k that has more than 2 cells
     final_k <- NULL
 
-    for (k in 10:2) {
+    for (k in 4:2) {
       temp_clusters <- cutree(hcc, k = k)
       min_size <- min(table(temp_clusters))
       if (min_size > 2) {
