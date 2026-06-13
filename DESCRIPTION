@@ -2,6 +2,7 @@ Package: copykat
 Type: Package
 Title: CopyKAT: Inference of genomic copy number and subclonal structure of human tumors from high-throughput single cell RNA-seq data
 Version: 1.2.0
+Date: 2026-06-12
 Author: Ruli Gao
 Maintainer: Ruli Gao <ruli.gao@northwestern.edu>
 Description: CopyKAT is a computational tool for calculating single cell DNA copy numbers to separate aneuploid cells from diploid cells, and tumor subclones using high-throughput sc-RNAseq data.
