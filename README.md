@@ -15,11 +15,7 @@ remove.packages("copykat")
 detach("package:copykat")
 ``` 
 
-### The current version is V1.2.0. Updated on June 12th, 2026
-### Changes in V1.2.0:
-Improved potential false assignment of prediction results
-
-### Instruction continued
+### Example data and test
 An example raw UMI matrix from a breast tumor sequenced by 10X 3'RNAseq protocol is included with this package named, exp.rawdata.
 
 To test the package, simply issue this line of code in R/Rstudio:
