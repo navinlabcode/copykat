@@ -26,7 +26,6 @@
 #' @export
 ###
 
-
 copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min.gene.per.cell=200, LOW.DR=0.05, UP.DR=0.1, win.size=25, norm.cell.names="", KS.cut=0.1, sam.name="", distance="euclidean", output.seg="FALSE", plot.genes="TRUE", genome="hg20", n.cores=1){
 
   start_time <- Sys.time()
@@ -242,6 +241,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
   if(genome=="hg20"){
   print("step 6: convert to genomic bins...") ###need multi-core, time consuming step
   Aj <- convert.all.bins.hg20(DNA.mat = DNA.hg20, RNA.mat=RNA.copycat, n.cores = n.cores)
+  write.table(Aj$RNA.adj, paste(sample.name, "CNA_raw_results_bin_by_cell.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
 
   uber.mat.adj <- data.matrix(Aj$RNA.adj[, 4:ncol(Aj$RNA.adj)])
 
@@ -380,10 +380,10 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
         }
 
         #confident diploid cluster
-        cl.diploid <- which(cl.ID==max(cl.ID))
-        cl.aneuploid  <- which(cl.ID==min(cl.ID))
-        conses.diploid <- apply(uber.mat.adj[,which(hc.umap ==cl.diploid)], 1, median)
-        conses.aneuploid <- apply(uber.mat.adj[,which(hc.umap ==cl.aneuploid)], 1, median)
+        cl.diploid <- which(cl.ID %in% max(cl.ID))
+        cl.aneuploid  <- which(cl.ID %in% min(cl.ID))
+        conses.diploid <- apply(uber.mat.adj[,which(hc.umap %in% cl.diploid)], 1, median)
+        conses.aneuploid <- apply(uber.mat.adj[,which(hc.umap %in% cl.aneuploid)], 1, median)
 
         #assign
         com.preN <- names(hc.umap)
@@ -392,16 +392,16 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
           com.preN[1:length(com.preN)] <- "diploid"
         } else{
           for (i in 1:max(hc.umap)){
-            conses <- apply(uber.mat.adj[,which(hc.umap ==i)], 1, median)
-            if(cor(conses,conses.diploid) > cor(conses,conses.aneuploid)){
-              com.preN[which(hc.umap == i)] <- "diploid"
-            }else{
-              com.preN[which(hc.umap == i)] <- "aneuploid"
-            }
+                                conses <- apply(uber.mat.adj[,which(hc.umap ==i)], 1, median)
+                                if(transport::wasserstein1d(conses,conses.diploid) < transport::wasserstein1d(conses,conses.aneuploid)){
+                                com.preN[which(hc.umap == i)] <- "diploid"
+                                 }else{
+                                  com.preN[which(hc.umap == i)] <- "aneuploid"
+                                    }
 
-          }
+                                      }
 
-        }
+                   }
 
         names(com.preN) <- names(hc.umap)
         if(cor(conses.diploid,conses.aneuploid)>=0.4 & cor(conses.diploid,conses.aneuploid)<0.6){
@@ -409,7 +409,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
         }
         ### new change in v1.2.0 end
         com.pred <- com.preN
-  ################removed baseline adjustment
+  ############### baseline re-adjustment
         results.com.rat <- uber.mat.adj-apply(uber.mat.adj[,which(com.pred=="diploid")], 1, mean)
         results.com.rat <- apply(results.com.rat,2,function(x)(x <- x-mean(x)))
         results.com.rat.norm <- results.com.rat[,which(com.pred=="diploid")]; dim(results.com.rat.norm)
@@ -422,7 +422,6 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
         a[abs(a-base) <= 0.25*cf.h] <- mean(a)
         a
         }
-
 
         mc.adjN <-  parallel::mclapply(1:ncol(results.com.rat),adjN, mc.cores = n.cores)
         adj.results <- matrix(unlist(mc.adjN), ncol = ncol(results.com.rat), byrow = FALSE)
@@ -469,21 +468,24 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
         }
 
         #confident diploid cluster
-        cl.diploid <- which(cl.ID==max(cl.ID))
-        cl.aneuploid  <- which(cl.ID==min(cl.ID))
-        conses.diploid <- apply(mat.adj[,which(hc.umap ==cl.diploid)], 1, median)
-        conses.aneuploid <- apply(mat.adj[,which(hc.umap ==cl.aneuploid)], 1, median)
+        cl.diploid <- which(cl.ID %in% max(cl.ID))
+        cl.aneuploid  <- which(cl.ID %in% min(cl.ID))
+        conses.diploid <- apply(mat.adj[,which(hc.umap %in% cl.diploid)], 1, median)
+        conses.aneuploid <- apply(mat.adj[,which(hc.umap %in% cl.aneuploid)], 1, median)
 
         #assign
         com.preN <- names(hc.umap)
 
-        if(cor(conses.diploid,conses.aneuploid)>=0.6){ # take empircal cuoff
+        if(cor(conses.diploid,conses.aneuploid)>=0.6){ # take empirical cutoff
           com.preN[1:length(com.preN)] <- "diploid"
         } else{
           for (i in 1:max(hc.umap)){
             conses <- apply(mat.adj[,which(hc.umap ==i)], 1, median)
-            if(cor(conses,conses.diploid) > cor(conses,conses.aneuploid)){
-              com.preN[which(hc.umap == i)] <- "diploid"
+            if(transport::wasserstein1d(conses,conses.diploid) < transport::wasserstein1d(conses,conses.aneuploid)){
+              # Quantify the minimum 'work' to transform profile A to profile B
+              # Lower values mean higher true structural similarity
+
+               com.preN[which(hc.umap == i)] <- "diploid"
             }else{
               com.preN[which(hc.umap == i)] <- "aneuploid"
             }
@@ -493,6 +495,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
         }
 
         names(com.preN) <- names(hc.umap)
+        table(hc.umap, com.preN)
 
         if(cor(conses.diploid,conses.aneuploid)>=0.4 & cor(conses.diploid,conses.aneuploid)<0.6){
           WNS=="unclassified.prediction"
@@ -517,11 +520,13 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
     res <- data.frame(cbind(names(com.preN), com.preN))
     colnames(res) <- c("cell.names", "copykat.pred")
   }
-  ##end
+
+##end
+
   write.table(res, paste(sample.name, "prediction.txt",sep=""), sep="\t", row.names = FALSE, quote = FALSE)
 
   ####save copycat CNA
-  write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "CNA_results.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
+  write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "CNA_final_results_bin_by_cell.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
 
   ####%%%%%%%%%%%%%%%%%next heatmaps, subpopulations and tSNE overlay
   print("step 10: ploting heatmap ...")
@@ -534,7 +539,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
 
   rbPal5 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Dark2")[2:1])
   compreN_pred <- rbPal5(2)[as.numeric(factor(com.preN))]
-
+table(hc.umap, com.preN)
   cells <- rbind(compreN_pred,compreN_pred)
 
   if (ncol(mat.adj)< 3000){
@@ -703,18 +708,18 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
     #confident diploid cluster
     cl.diploid <- which(cl.ID==max(cl.ID))
     cl.aneuploid  <- which(cl.ID==min(cl.ID))
-    conses.diploid <- apply(uber.mat.adj[,which(hc.umap ==cl.diploid)], 1, median)
-    conses.aneuploid <- apply(uber.mat.adj[,which(hc.umap ==cl.aneuploid)], 1, median)
+    conses.diploid <- apply(uber.mat.adj[,which(hc.umap %in% cl.diploid)], 1, median)
+    conses.aneuploid <- apply(uber.mat.adj[,which(hc.umap %in% cl.aneuploid)], 1, median)
 
     #assign
     com.preN <- names(hc.umap)
 
-    if(cor(conses.diploid,conses.aneuploid)>0.6){ # take empircal cuoff
+    if(cor(conses.diploid,conses.aneuploid)>0.6){ # take empirical cutoff
       com.preN[1:length(com.preN)] <- "diploid"
     } else{
       for (i in 1:max(hc.umap)){
         conses <- apply(uber.mat.adj[,which(hc.umap ==i)], 1, median)
-        if(cor(conses,conses.diploid) > cor(conses,conses.aneuploid)){
+        if(transport::wasserstein1d(conses,conses.diploid) < transport::wasserstein1d(conses,conses.aneuploid)){
           com.preN[which(hc.umap == i)] <- "diploid"
         }else{
           com.preN[which(hc.umap == i)] <- "aneuploid"
@@ -795,8 +800,8 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
     #confident diploid cluster
     cl.diploid <- which(cl.ID==max(cl.ID))
     cl.aneuploid  <- which(cl.ID==min(cl.ID))
-    conses.diploid <- apply(mat.adj[,which(hc.umap ==cl.diploid)], 1, median)
-    conses.aneuploid <- apply(mat.adj[,which(hc.umap ==cl.aneuploid)], 1, median)
+    conses.diploid <- apply(mat.adj[,which(hc.umap %in% cl.diploid)], 1, median)
+    conses.aneuploid <- apply(mat.adj[,which(hc.umap %in% cl.aneuploid)], 1, median)
 
     #assign
     com.preN <- names(hc.umap)
@@ -806,7 +811,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
     } else{
       for (i in 1:max(hc.umap)){
         conses <- apply(mat.adj[,which(hc.umap ==i)], 1, median)
-        if(cor(conses,conses.diploid) > cor(conses,conses.aneuploid)){
+        if(transport::wasserstein1d(conses,conses.diploid) < transport::wasserstein1d(conses,conses.aneuploid)){
           com.preN[which(hc.umap == i)] <- "diploid"
         }else{
           com.preN[which(hc.umap == i)] <- "aneuploid"
