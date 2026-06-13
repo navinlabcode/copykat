@@ -382,8 +382,8 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
         #confident diploid cluster
         cl.diploid <- which(cl.ID==max(cl.ID))
         cl.aneuploid  <- which(cl.ID==min(cl.ID))
-        conses.diploid <- apply(mat.adj[,which(hc.umap ==cl.diploid)], 1, median)
-        conses.aneuploid <- apply(mat.adj[,which(hc.umap ==cl.aneuploid)], 1, median)
+        conses.diploid <- apply(uber.mat.adj[,which(hc.umap ==cl.diploid)], 1, median)
+        conses.aneuploid <- apply(uber.mat.adj[,which(hc.umap ==cl.aneuploid)], 1, median)
 
         #assign
         com.preN <- names(hc.umap)
@@ -392,8 +392,8 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
           com.preN[1:length(com.preN)] <- "diploid"
         } else{
           for (i in 1:max(hc.umap)){
-            conses <- apply(mat.adj[,which(hc.umap ==i)], 1, median)
-            if(cor(conses,consenses.diploid) > cor(conses,consenses.aneuploid)){
+            conses <- apply(uber.mat.adj[,which(hc.umap ==i)], 1, median)
+            if(cor(conses,conses.diploid) > cor(conses,conses.aneuploid)){
               com.preN[which(hc.umap == i)] <- "diploid"
             }else{
               com.preN[which(hc.umap == i)] <- "aneuploid"
@@ -408,7 +408,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
           WNS=="unclassified.prediction"
         }
         ### new change in v1.2.0 end
-
+        com.pred <- com.preN
   ################removed baseline adjustment
         results.com.rat <- uber.mat.adj-apply(uber.mat.adj[,which(com.pred=="diploid")], 1, mean)
         results.com.rat <- apply(results.com.rat,2,function(x)(x <- x-mean(x)))
@@ -482,7 +482,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
         } else{
           for (i in 1:max(hc.umap)){
             conses <- apply(mat.adj[,which(hc.umap ==i)], 1, median)
-            if(cor(conses,consenses.diploid) > cor(conses,consenses.aneuploid)){
+            if(cor(conses,conses.diploid) > cor(conses,conses.aneuploid)){
               com.preN[which(hc.umap == i)] <- "diploid"
             }else{
               com.preN[which(hc.umap == i)] <- "aneuploid"
@@ -703,8 +703,8 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
     #confident diploid cluster
     cl.diploid <- which(cl.ID==max(cl.ID))
     cl.aneuploid  <- which(cl.ID==min(cl.ID))
-    conses.diploid <- apply(mat.adj[,which(hc.umap ==cl.diploid)], 1, median)
-    conses.aneuploid <- apply(mat.adj[,which(hc.umap ==cl.aneuploid)], 1, median)
+    conses.diploid <- apply(uber.mat.adj[,which(hc.umap ==cl.diploid)], 1, median)
+    conses.aneuploid <- apply(uber.mat.adj[,which(hc.umap ==cl.aneuploid)], 1, median)
 
     #assign
     com.preN <- names(hc.umap)
@@ -713,8 +713,8 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
       com.preN[1:length(com.preN)] <- "diploid"
     } else{
       for (i in 1:max(hc.umap)){
-        conses <- apply(mat.adj[,which(hc.umap ==i)], 1, median)
-        if(cor(conses,consenses.diploid) > cor(conses,consenses.aneuploid)){
+        conses <- apply(uber.mat.adj[,which(hc.umap ==i)], 1, median)
+        if(cor(conses,conses.diploid) > cor(conses,conses.aneuploid)){
           com.preN[which(hc.umap == i)] <- "diploid"
         }else{
           com.preN[which(hc.umap == i)] <- "aneuploid"
@@ -731,7 +731,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
     }
 
     ### new change in v1.2.0 end
-
+    com.pred <- com.preN
     ################removed baseline adjustment
     results.com.rat <- uber.mat.adj-apply(uber.mat.adj[,which(com.pred=="diploid")], 1, mean)
 
@@ -806,7 +806,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
     } else{
       for (i in 1:max(hc.umap)){
         conses <- apply(mat.adj[,which(hc.umap ==i)], 1, median)
-        if(cor(conses,consenses.diploid) > cor(conses,consenses.aneuploid)){
+        if(cor(conses,conses.diploid) > cor(conses,conses.aneuploid)){
           com.preN[which(hc.umap == i)] <- "diploid"
         }else{
           com.preN[which(hc.umap == i)] <- "aneuploid"

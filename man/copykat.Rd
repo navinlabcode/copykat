@@ -9,6 +9,7 @@ copykat(
   id.type = "S",
   cell.line = "no",
   ngene.chr = 5,
+  min.gene.per.cell = 200,
   LOW.DR = 0.05,
   UP.DR = 0.1,
   win.size = 25,
@@ -30,6 +31,8 @@ copykat(
 \item{cell.line}{if the data are from pure cell line,put "yes"; if cell line data are a mixture of tumor and normal cells, still put "no".}
 
 \item{ngene.chr}{minimal number of genes per chromosome for cell filtering.}
+
+\item{min.gene.per.cell, }{default 200}
 
 \item{LOW.DR}{minimal population fractions of genes for smoothing.}
 
@@ -60,7 +63,7 @@ copykat(
 copycat main_func.
 }
 \examples{
-test.ck <- copykat(rawmat=rawdata,id.type="S", ngene.chr=5, win.size=25, KS.cut=0.1,sam.name="test", distance="euclidean", norm.cell.names="", n.cores=4, output.seg="FALSE")
+test.ck <- copykat(rawmat=rawdata,id.type="S", ngene.chr=5, win.size=25, KS.cut=0.1,sam.name="test", distance="euclidean", norm.cell.names="", n.cores=4, output.seg="FALSE", min.gene.per.cell=200)
 
 test.pred <- test.ck$prediction
 }

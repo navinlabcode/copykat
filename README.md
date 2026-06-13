@@ -15,18 +15,9 @@ remove.packages("copykat")
 detach("package:copykat")
 ``` 
 
-### The current version is V1.1.0. Updated on Sep23, 2022
-### Changes in V1.1.0:
-Fixed issues in outputing 'not.defined' cells in final prediction table.
-
-### Changes in V1.0.8:
-Introduced methods for calculating copy numbers from mouse scRNAseq data (to run mouse module, set genome="mm10" in the main function).  This version outputs single cell copy number results in gene by cell dimension.  Gene names are plotted in the bottom of heatmap.  Zooming into the heatmap to read gene names.
-
-### Changes in V1.0.6.
-Two coordinate errors related to new hg20 contigs were fixed. 
-Added heatmap plot of single cell copy number results with gene by cell matrix; genenames are plotted in the heatmap in the PDF files. Zooming into the bottom of the heatmap to find gene names in each segment.  Due to the large file size, it could be slow. Default is: plot.genes="TRUE". Users can change it to plot.genes="FALSE" if gene names are not wanted.
-Added the filtered cells back to the prediction results
-Output the *.seg file, which can be loaded to IGV viewer to visualize the results directly.  default: output.seg="FALSE".  Users can change to:output.seg="TRUE". 
+### The current version is V1.2.0. Updated on June 12th, 2026
+### Changes in V1.2.0:
+Improved potential false assignment of prediction results
 
 ### Instruction continued
 An example raw UMI matrix from a breast tumor sequenced by 10X 3'RNAseq protocol is included with this package named, exp.rawdata.
