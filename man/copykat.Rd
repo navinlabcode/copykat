@@ -7,6 +7,7 @@
 copykat(
   rawmat = rawdata,
   id.type = "S",
+  cell.group = "",
   cell.line = "no",
   ngene.chr = 5,
   min.gene.per.cell = 200,
@@ -17,6 +18,7 @@ copykat(
   KS.cut = 0.1,
   sam.name = "",
   distance = "euclidean",
+  test.emd = "FALSE",
   output.seg = "FALSE",
   plot.genes = "TRUE",
   genome = "hg20",
@@ -27,6 +29,8 @@ copykat(
 \item{rawmat}{raw data matrix; genes in rows; cell names in columns.}
 
 \item{id.type}{gene id type: Symbol or Ensemble.}
+
+\item{cell.group}{a vector of cell grouping information. names it with cell barcodes matched with rawmat. Only provide it when users want to see prior cell typing or clustering results in heatmap side bars.}
 
 \item{cell.line}{if the data are from pure cell line,put "yes"; if cell line data are a mixture of tumor and normal cells, still put "no".}
 
@@ -47,6 +51,8 @@ copykat(
 \item{sam.name}{sample name.}
 
 \item{distance}{distance methods include euclidean, and correlation converted distance include pearson and spearman.}
+
+\item{test.emd}{indicate if show emd clustering results,default ="false"}
 
 \item{output.seg}{TRUE or FALSE, output seg file for IGV visualization}
 

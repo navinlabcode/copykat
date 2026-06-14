@@ -2,6 +2,7 @@
 #'
 #' @param rawmat raw data matrix; genes in rows; cell names in columns.
 #' @param id.type gene id type: Symbol or Ensemble.
+#' @param cell.group a vector of cell grouping information. names it with cell barcodes matched with rawmat. Only provide it when users want to see prior cell typing or clustering results in heatmap side bars.
 #' @param cell.line if the data are from pure cell line,put "yes"; if cell line data are a mixture of tumor and normal cells, still put "no".
 #' @param LOW.DR minimal population fractions of genes for smoothing.
 #' @param UP.DR minimal population fractions of genes for segmentation.
@@ -16,6 +17,7 @@
 #' @param plot.genes TRUE or FALSE, output heatmap of CNVs with genename labels
 #' @param genome hg20 or mm10, current version only work for human or mouse genes
 #' @param min.gene.per.cell, default 200
+#' @param test.emd indicate if show emd clustering results,default ="false"
 #' @return 1) aneuploid/diploid prediction results; 2) CNA results in 220KB windows; 3) heatmap; 4) hclustering object.
 #'
 #' @examples
@@ -26,13 +28,13 @@
 #' @export
 ###
 
-copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min.gene.per.cell=200, LOW.DR=0.05, UP.DR=0.1, win.size=25, norm.cell.names="", KS.cut=0.1, sam.name="", distance="euclidean", output.seg="FALSE", plot.genes="TRUE", genome="hg20", n.cores=1){
+copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", ngene.chr=5,min.gene.per.cell=200, LOW.DR=0.05, UP.DR=0.1, win.size=25, norm.cell.names="", KS.cut=0.1, sam.name="", distance="euclidean", test.emd="FALSE", output.seg="FALSE", plot.genes="TRUE", genome="hg20", n.cores=1){
 
   start_time <- Sys.time()
   set.seed(1234)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
-  print("running copykat v1.2.1")
+  print("running copykat v1.2.3")
 
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
@@ -148,7 +150,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
          fit <- hclust(d, method="ward.D2")
          CL <- cutree(fit, km)
 
-         while(!all(table(CL)>5)){
+         while(!all(table(CL)>10)){
          km <- km -1
          CL <- cutree(fit, k=km)
          if(km==2){
@@ -162,7 +164,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
       	norm.mat.relat <- norm.mat.smooth-basel
 
         }else {
-          basa <- copykat::baseline.norm.cl(norm.mat.smooth=norm.mat.smooth, min.cells=5, n.cores=n.cores)
+          basa <- copykat::baseline.norm.cl(norm.mat.smooth=norm.mat.smooth, min.cells=10, n.cores=n.cores)
           basel <- basa$basel
           WNS <- basa$WNS
           preN <- basa$preN
@@ -261,7 +263,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
 
                    #plot heatmap
                    print("step 8: ploting heatmap ...")
-                    my_palette <- colorRampPalette(rev(RColorBrewer::brewer.pal(n = 3, name = "RdBu")))(n = 999)
+                  my_palette <- colorRampPalette(rev(RColorBrewer::brewer.pal(n = 3, name = "RdBu")))(n = 999)
 
                    chr <- as.numeric(Aj$DNA.adj$chrom) %% 2+1
                    rbPal1 <- colorRampPalette(c('black','grey'))
@@ -324,7 +326,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
                           CHRg <- rbPal1(2)[as.numeric(chrg)]
                           chr1g <- cbind(CHRg,CHRg)
 
-                          pdf(paste(sample.name,"with_genes_heatmap.pdf",sep=""), height=h*2.5, width=40)
+                          pdf(paste(sample.name,"_raw_results_gene_by_cell.pdf",sep=""), height=h*2.5, width=40)
                           heatmap.3(t(results.com),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
                           ColSideColors=chr1g,Colv=NA, Rowv=TRUE,
                           notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
@@ -345,43 +347,42 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
     } else {
       ########## cell line mode ends here ####################
 
-       #removed baseline adjustment
+       #baseline adjustment
         if(distance=="euclidean"){
         hcc <- hclust(parallelDist::parDist(t(uber.mat.adj),threads =n.cores, method = distance), method = "ward.D")
         }else {
         hcc <- hclust(as.dist(1-cor(uber.mat.adj, method = distance)), method = "ward.D")
         }
 
-        ### new change in v1.2.0 end
-        ## Loop backwards from 10 clusters down to 2 to find the highest k that has more than 2 cells
+        ### new change in v1.2.0
         final_k <- NULL
 
         for (k in 4:2) {
           temp_clusters <- cutree(hcc, k = k)
           min_size <- min(table(temp_clusters))
-          if (min_size > 2) {
+          if (min_size > 10) {
             final_k <- k
             clusters <- temp_clusters
             break
           }
         }
 
-        hc.umap <- cutree(hcc,final_k)
-        names(hc.umap) <- colnames(results.com)
+        hc.short <- cutree(hcc,final_k)
+        names(hc.short) <- colnames(results.com)
 
         #decide on most confident groups
         cl.ID <- NULL
-        for(i in 1:max(hc.umap)){
-          cli <- names(hc.umap)[which(hc.umap==i)]
+        for(i in 1:max(hc.short)){
+          cli <- names(hc.short)[which(hc.short==i)]
           pid <- length(intersect(cli, preN))/length(preN) #change length(cli) to be length(preN) in v1.2.0
           cl.ID <- c(cl.ID, pid)
           i<- i+1
         }
 
         #confident diploid cluster
-        com.pred <- names(hc.umap)
-        com.pred[which(hc.umap %in% which(cl.ID %in% max(cl.ID)))] <- "diploid"
-        names(com.pred) <- names(hc.umap)
+        com.pred <- names(hc.short)
+        com.pred[which(hc.short %in% which(cl.ID %in% max(cl.ID)))] <- "diploid"
+        names(com.pred) <- names(hc.short)
 
 
   ############### baseline re-adjustment
@@ -414,7 +415,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
          hcc <- hclust(as.dist(1-cor(mat.adj, method = distance)), method = "ward.D")
          }
 
-        saveRDS(hcc, file = paste(sample.name,"clustering_results.rds",sep=""))
+       # saveRDS(hcc, file = paste(sample.name,"clustering_results.rds",sep=""))
 
         ### new change in v1.2.0 end
         ## Loop backwards from 10 clusters down to 2 to find the highest k that has more than 2 cells
@@ -423,7 +424,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
         for (k in 4:2) {
           temp_clusters <- cutree(hcc, k = k)
           min_size <- min(table(temp_clusters))
-          if (min_size > 2) {
+          if (min_size > 10) {
             final_k <- k
             clusters <- temp_clusters
             break
@@ -470,7 +471,6 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
         }
 
         names(com.preN) <- names(hc.umap)
-        table(hc.umap, com.preN)
 
         if(cor(conses.diploid,conses.aneuploid)>=0.4 & cor(conses.diploid,conses.aneuploid)<0.6){
           WNS=="unclassified.prediction"
@@ -515,18 +515,28 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
   rbPal5 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Dark2")[2:1])
   compreN_pred <- rbPal5(2)[as.numeric(factor(com.preN))]
 
-  print("add cards of clustering method for testing purpose")
-  d_emd <- copykat::cal_dist(mat.adj, method="emd", num_cores=n.cores)
-  hc_emd <- hclust(d_emd, method = "ward.D")
-  hc.emd <- cutree(hc_emd, final_k)
-
+  ##add clustering of gene by cell matrix for testing purpose
   rbPal6 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Set1"))
-  eu.clust <- rbPal6(final_k)[as.numeric(factor(hc.umap))]
+  short.clust <- rbPal6(length(unique(hc.short)))[as.numeric(factor(hc.short))]
+
+  cells <- rbind(short.clust, compreN_pred)
+
+  if(length(cell.group)==ncol(mat.adj)){
+    cell.group <- cell.group[order(match(names(cell.group), colnames(mat.adj)))]
+    rbPal7 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Paired"))
+    cellgroup <- rbPal7(length(unique(cell.group)))[as.numeric(factor(cell.group))]
+    cells <- rbind(cellgroup, cells)
+  }
+
+  if (test.emd == "TRUE"){
+  d_emd <- copykat::cal_dist(uber.mat.adj, method="emd", num_cores=n.cores) #emd on short gene by cell mat
+  hc_emd <- hclust(d_emd, method = "ward.D")
+  hc.emd <- cutree(hc_emd,length(unique(hc.short)))
 
   rbPal7 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Set2"))
-  emd.clust <- rbPal7(final_k)[as.numeric(factor(hc.emd))]
-
-  cells <- rbind(compreN_pred, eu.clust, emd.clust)
+  emd.clust <- rbPal7(length(unique(hc.short)))[as.numeric(factor(hc.emd))]
+  cells <- rbind(emd.clust, cells)
+  }
 
   if (ncol(mat.adj)< 3000){
     h <- 10
@@ -672,20 +682,20 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
     for (k in 4:2) {
       temp_clusters <- cutree(hcc, k = k)
       min_size <- min(table(temp_clusters))
-      if (min_size > 2) {
+      if (min_size > 10) {
         final_k <- k
         clusters <- temp_clusters
         break
       }
     }
 
-    hc.umap <- cutree(hcc,final_k)
-    names(hc.umap) <- colnames(results.com)
+    hc.short <- cutree(hcc,final_k)
+    names(hc.short) <- colnames(results.com)
 
     #decide on most confident groups
     cl.ID <- NULL
-    for(i in 1:max(hc.umap)){
-      cli <- names(hc.umap)[which(hc.umap==i)]
+    for(i in 1:max(hc.short)){
+      cli <- names(hc.short)[which(hc.short==i)]
       pid <- length(intersect(cli, preN))/length(preN) #change length(cli) to be length(preN) in v1.2.0
       cl.ID <- c(cl.ID, pid)
       i<- i+1
@@ -693,8 +703,8 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
 
     #confident diploid cluster
     #assign
-    com.pred <- names(hc.umap)
-    com.pred[which(hc.umap %in% which(cl.ID %in% max(cl.ID)))] <- "diploid"
+    com.pred <- names(hc.short)
+    com.pred[which(hc.short %in% which(cl.ID %in% max(cl.ID)))] <- "diploid"
 
     ################removed baseline adjustment
     results.com.rat <- uber.mat.adj-apply(uber.mat.adj[,which(com.pred=="diploid")], 1, mean)
@@ -737,7 +747,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
     for (k in 4:2) {
       temp_clusters <- cutree(hcc, k = k)
       min_size <- min(table(temp_clusters))
-      if (min_size > 2) {
+      if (min_size > 10) {
         final_k <- k
         clusters <- temp_clusters
         break
@@ -825,18 +835,28 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
     rbPal5 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Dark2")[2:1])
     compreN_pred <- rbPal5(2)[as.numeric(factor(com.preN))]
 
-    ##add clustering method for testing purpose
-    d_emd <- copykat::cal_dist(mat.adj, method="emd", num_cores=n.cores)
-    hc_emd <- hclust(d_emd, method = "ward.D")
-    hc.emd <- cutree(hc_emd,final_k)
-
+    ##add clustering of gene by cell matrix for testing purpose
     rbPal6 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Set1"))
-    eu.clust <- rbPal6(length(final_k))[as.numeric(factor(hc.umap))]
+    short.clust <- rbPal6(length(unique(hc.short)))[as.numeric(factor(hc.short))]
 
-    rbPal7 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Set2"))
-    emd.clust <- rbPal7(length(final_k))[as.numeric(factor(hc.emd))]
+    cells <- rbind(short.clust, compreN_pred)
 
-    cells <- rbind(compreN_pred,eu.clust, emd.clust)
+    if(length(cell.group)==ncol(mat.adj)){
+      cell.group <- cell.group[order(match(names(cell.group), colnames(mat.adj)))]
+      rbPal7 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Paired"))
+      cellgroup <- rbPal7(length(unique(cell.group)))[as.numeric(factor(cell.group))]
+      cells <- rbind(cellgroup, cells)
+    }
+
+    if (test.emd == "TRUE"){
+      d_emd <- copykat::cal_dist(uber.mat.adj, method="emd", num_cores=n.cores) #emd on short gene by cell mat
+      hc_emd <- hclust(d_emd, method = "ward.D")
+      hc.emd <- cutree(hc_emd,length(unique(hc.short)))
+
+      rbPal7 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Set2"))
+      emd.clust <- rbPal7(length(unique(hc.short)))[as.numeric(factor(hc.emd))]
+      cells <- rbind(emd.clust, cells)
+    }
 
     if (ncol(mat.adj)< 3000){
       h <- 10
