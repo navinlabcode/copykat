@@ -70,7 +70,6 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
   # print(paste(nrow(anno.mat)," genes annotated", sep=""))
 
   ### module 3 removing genes that are involved in cell cycling
-
   if(genome=="hg20"){
   HLAs <- anno.mat$hgnc_symbol[grep("^HLA-", anno.mat$hgnc_symbol)]
   toRev <- which(anno.mat$hgnc_symbol %in% c(as.vector(cyclegenes[[1]]), HLAs))
@@ -516,18 +515,18 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
   rbPal5 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Dark2")[2:1])
   compreN_pred <- rbPal5(2)[as.numeric(factor(com.preN))]
 
-  ##add clustering method for testing purpose
+  print("add cards of clustering method for testing purpose")
   d_emd <- cal_dist(mat.adj, method="emd", num_cores=n.cores)
-  hc_emd <- hclust(d_emd, )
-  hc.emd <- cutree(hc_emd,final_k)
+  hc_emd <- hclust(d_emd, method = "ward.D")
+  hc.emd <- cutree(hc_emd, final_k)
 
   rbPal6 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Set1"))
-  clust <- rbPal6(length(final_k))[as.numeric(factor(hcc.umap))]
+  eu.clust <- rbPal6(length(final_k))[as.numeric(factor(hcc.umap))]
 
   rbPal7 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Set2"))
   emd.clust <- rbPal7(length(final_k))[as.numeric(factor(hcc.emd))]
 
-  cells <- rbind(compreN_pred,clust, emd.clust)
+  cells <- rbind(compreN_pred, eu.clust, emd.clust)
 
   if (ncol(mat.adj)< 3000){
     h <- 10
@@ -828,16 +827,16 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
 
     ##add clustering method for testing purpose
     d_emd <- cal_dist(mat.adj, method="emd", num_cores=n.cores)
-    hc_emd <- hclust(d_emd, )
+    hc_emd <- hclust(d_emd, method = "ward.D")
     hc.emd <- cutree(hc_emd,final_k)
 
     rbPal6 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Set1"))
-    clust <- rbPal6(length(final_k))[as.numeric(factor(hcc.umap))]
+    eu.clust <- rbPal6(length(final_k))[as.numeric(factor(hcc.umap))]
 
     rbPal7 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Set2"))
     emd.clust <- rbPal7(length(final_k))[as.numeric(factor(hcc.emd))]
 
-    cells <- rbind(compreN_pred,clust, emd.clust)
+    cells <- rbind(compreN_pred,eu.clust, emd.clust)
 
     if (ncol(mat.adj)< 3000){
       h <- 10
