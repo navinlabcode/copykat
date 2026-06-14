@@ -521,10 +521,10 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
   hc.emd <- cutree(hc_emd, final_k)
 
   rbPal6 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Set1"))
-  eu.clust <- rbPal6(length(final_k))[as.numeric(factor(hc.umap))]
+  eu.clust <- rbPal6(final_k)[as.numeric(factor(hc.umap))]
 
   rbPal7 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Set2"))
-  emd.clust <- rbPal7(length(final_k))[as.numeric(factor(hc.emd))]
+  emd.clust <- rbPal7(final_k)[as.numeric(factor(hc.emd))]
 
   cells <- rbind(compreN_pred, eu.clust, emd.clust)
 
