@@ -14,9 +14,9 @@
 #' @export
 
 
-baseline.norm.cl <- function(norm.mat.smooth, distance=distance, min.cells=5, n.cores=n.cores){
+baseline.norm.cl <- function(norm.mat.smooth, min.cells=5, n.cores=n.cores){
 
-  d <- cal_dist(norm.mat.smooth, method=distance, num_cores=n.cores)
+  d <- parallelDist::parDist(t(norm.mat.smooth), threads = n.cores) ##use smooth and segmented data to detect intra-normal cells
   km <- 6
   fit <- hclust(d, method="ward.D2")
   ct <- cutree(fit, k=km)

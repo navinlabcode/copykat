@@ -4,12 +4,7 @@
 \alias{baseline.norm.cl}
 \title{find a cluster of diploid cells with integrative clustering method}
 \usage{
-baseline.norm.cl(
-  norm.mat.smooth,
-  distance = distance,
-  min.cells = 5,
-  n.cores = n.cores
-)
+baseline.norm.cl(norm.mat.smooth, min.cells = 5, n.cores = n.cores)
 }
 \arguments{
 \item{norm.mat.smooth}{smoothed data matrix; genes in rows; cell names in columns.}
