@@ -162,7 +162,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
       	norm.mat.relat <- norm.mat.smooth-basel
 
         }else {
-          basa <- baseline.norm.cl(norm.mat.smooth=norm.mat.smooth, min.cells=5, n.cores=n.cores)
+          basa <- copykat::baseline.norm.cl(norm.mat.smooth=norm.mat.smooth, min.cells=5, n.cores=n.cores)
           basel <- basa$basel
           WNS <- basa$WNS
           preN <- basa$preN
@@ -516,7 +516,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
   compreN_pred <- rbPal5(2)[as.numeric(factor(com.preN))]
 
   print("add cards of clustering method for testing purpose")
-  d_emd <- cal_dist(mat.adj, method="emd", num_cores=n.cores)
+  d_emd <- copykat::cal_dist(mat.adj, method="emd", num_cores=n.cores)
   hc_emd <- hclust(d_emd, method = "ward.D")
   hc.emd <- cutree(hc_emd, final_k)
 
@@ -826,7 +826,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
     compreN_pred <- rbPal5(2)[as.numeric(factor(com.preN))]
 
     ##add clustering method for testing purpose
-    d_emd <- cal_dist(mat.adj, method="emd", num_cores=n.cores)
+    d_emd <- copykat::cal_dist(mat.adj, method="emd", num_cores=n.cores)
     hc_emd <- hclust(d_emd, method = "ward.D")
     hc.emd <- cutree(hc_emd,final_k)
 
