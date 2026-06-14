@@ -18,7 +18,9 @@ Imports:
 	mixtools,
 	cluster,
 	MCMCpack,
-  transport
+  transport,
+  stats,
+  utils
 RoxygenNote: 7.3.2
 Suggests: 
     knitr,

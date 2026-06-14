@@ -380,35 +380,11 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
         }
 
         #confident diploid cluster
-        cl.diploid <- which(cl.ID %in% max(cl.ID))
-        cl.aneuploid  <- which(cl.ID %in% min(cl.ID))
-        conses.diploid <- apply(uber.mat.adj[,which(hc.umap %in% cl.diploid)], 1, median)
-        conses.aneuploid <- apply(uber.mat.adj[,which(hc.umap %in% cl.aneuploid)], 1, median)
+        com.pred <- names(hc.umap)
+        com.pred[which(hc.umap %in% which(cl.ID %in% max(cl.ID)))] <- "diploid"
+        names(com.pred) <- names(hc.umap)
 
-        #assign
-        com.preN <- names(hc.umap)
 
-        if(cor(conses.diploid,conses.aneuploid)>0.6){ # take empircal cuoff
-          com.preN[1:length(com.preN)] <- "diploid"
-        } else{
-          for (i in 1:max(hc.umap)){
-                                conses <- apply(uber.mat.adj[,which(hc.umap ==i)], 1, median)
-                                if(transport::wasserstein1d(conses,conses.diploid) < transport::wasserstein1d(conses,conses.aneuploid)){
-                                com.preN[which(hc.umap == i)] <- "diploid"
-                                 }else{
-                                  com.preN[which(hc.umap == i)] <- "aneuploid"
-                                    }
-
-                                      }
-
-                   }
-
-        names(com.preN) <- names(hc.umap)
-        if(cor(conses.diploid,conses.aneuploid)>=0.4 & cor(conses.diploid,conses.aneuploid)<0.6){
-          WNS=="unclassified.prediction"
-        }
-        ### new change in v1.2.0 end
-        com.pred <- com.preN
   ############### baseline re-adjustment
         results.com.rat <- uber.mat.adj-apply(uber.mat.adj[,which(com.pred=="diploid")], 1, mean)
         results.com.rat <- apply(results.com.rat,2,function(x)(x <- x-mean(x)))
@@ -539,8 +515,19 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.line="no", ngene.chr=5,min
 
   rbPal5 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Dark2")[2:1])
   compreN_pred <- rbPal5(2)[as.numeric(factor(com.preN))]
-table(hc.umap, com.preN)
-  cells <- rbind(compreN_pred,compreN_pred)
+
+  ##add clustering method for testing purpose
+  d_emd <- cal_dist(mat.adj, method="emd", num_cores=n.cores)
+  hc_emd <- hclust(d_emd, )
+  hc.emd <- cutree(hc_emd,final_k)
+
+  rbPal6 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Set1"))
+  clust <- rbPal6(length(final_k))[as.numeric(factor(hcc.umap))]
+
+  rbPal7 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Set2"))
+  emd.clust <- rbPal7(length(final_k))[as.numeric(factor(hcc.emd))]
+
+  cells <- rbind(compreN_pred,clust, emd.clust)
 
   if (ncol(mat.adj)< 3000){
     h <- 10
@@ -706,37 +693,10 @@ table(hc.umap, com.preN)
     }
 
     #confident diploid cluster
-    cl.diploid <- which(cl.ID==max(cl.ID))
-    cl.aneuploid  <- which(cl.ID==min(cl.ID))
-    conses.diploid <- apply(uber.mat.adj[,which(hc.umap %in% cl.diploid)], 1, median)
-    conses.aneuploid <- apply(uber.mat.adj[,which(hc.umap %in% cl.aneuploid)], 1, median)
-
     #assign
-    com.preN <- names(hc.umap)
+    com.pred <- names(hc.umap)
+    com.pred[which(hc.umap %in% which(cl.ID %in% max(cl.ID)))] <- "diploid"
 
-    if(cor(conses.diploid,conses.aneuploid)>0.6){ # take empirical cutoff
-      com.preN[1:length(com.preN)] <- "diploid"
-    } else{
-      for (i in 1:max(hc.umap)){
-        conses <- apply(uber.mat.adj[,which(hc.umap ==i)], 1, median)
-        if(transport::wasserstein1d(conses,conses.diploid) < transport::wasserstein1d(conses,conses.aneuploid)){
-          com.preN[which(hc.umap == i)] <- "diploid"
-        }else{
-          com.preN[which(hc.umap == i)] <- "aneuploid"
-        }
-
-      }
-
-    }
-
-    names(com.preN) <- names(hc.umap)
-
-    if(cor(conses.diploid,conses.aneuploid)>=0.4 & cor(conses.diploid,conses.aneuploid)<0.6){
-      WNS=="unclassified.prediction"
-    }
-
-    ### new change in v1.2.0 end
-    com.pred <- com.preN
     ################removed baseline adjustment
     results.com.rat <- uber.mat.adj-apply(uber.mat.adj[,which(com.pred=="diploid")], 1, mean)
 
@@ -866,7 +826,18 @@ table(hc.umap, com.preN)
     rbPal5 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Dark2")[2:1])
     compreN_pred <- rbPal5(2)[as.numeric(factor(com.preN))]
 
-    cells <- rbind(compreN_pred,compreN_pred)
+    ##add clustering method for testing purpose
+    d_emd <- cal_dist(mat.adj, method="emd", num_cores=n.cores)
+    hc_emd <- hclust(d_emd, )
+    hc.emd <- cutree(hc_emd,final_k)
+
+    rbPal6 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Set1"))
+    clust <- rbPal6(length(final_k))[as.numeric(factor(hcc.umap))]
+
+    rbPal7 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Set2"))
+    emd.clust <- rbPal7(length(final_k))[as.numeric(factor(hcc.emd))]
+
+    cells <- rbind(compreN_pred,clust, emd.clust)
 
     if (ncol(mat.adj)< 3000){
       h <- 10
