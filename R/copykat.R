@@ -236,13 +236,13 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
   results.com <- apply(results$logCNA,2, function(x)(x <- x-mean(x)))
   RNA.copycat <- cbind(anno.mat2[, 1:7], results.com)
 
-  write.table(RNA.copycat, paste(sample.name, "_CopyKat_raw_results_gene_by_cell.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
+  write.table(RNA.copycat, paste(sample.name, "raw_results_gene_by_cell.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
 
   ##
   if(genome=="hg20"){
   print("step 6: convert to genomic bins...") ###need multi-core, time consuming step
   Aj <- convert.all.bins.hg20(DNA.mat = DNA.hg20, RNA.mat=RNA.copycat, n.cores = n.cores)
-  write.table(Aj$RNA.adj, paste(sample.name, "_CopyKat_raw_results_bin_by_cell.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
+  write.table(Aj$RNA.adj, paste(sample.name, "raw_results_bin_by_cell.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
 
   uber.mat.adj <- data.matrix(Aj$RNA.adj[, 4:ncol(Aj$RNA.adj)])
 
@@ -251,7 +251,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
     if(cell.line=="yes"){
 
                    mat.adj <- data.matrix(Aj$RNA.adj[, 4:ncol(Aj$RNA.adj)])
-                   write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "CNA_results.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
+                   write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "raw_results_bin_by_cell.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
 
                    if(distance=="euclidean"){
                     hcc <- hclust(parallelDist::parDist(t(mat.adj),threads =n.cores, method = distance), method = "ward.D")
@@ -259,7 +259,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
                     hcc <- hclust(as.dist(1-cor(mat.adj, method = distance)), method = "ward.D")
                      }
 
-                  saveRDS(hcc, file = paste(sample.name,"_CopyKat_raw_results_cell_clusters.rds",sep=""))
+                  saveRDS(hcc, file = paste(sample.name,"raw_results_cell_clusters.rds",sep=""))
 
                    #plot heatmap
                    print("step 8: ploting heatmap ...")
@@ -280,7 +280,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
                   #library(parallelDist)
 
                    if(distance=="euclidean"){
-                          jpeg(paste(sample.name,"_CopyKat_raw_results_bin_by_cell_heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
+                          jpeg(paste(sample.name,"raw_results_bin_by_cell_heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
                           heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),
                           ColSideColors=chr1,Colv=NA, Rowv=TRUE,
                           notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
@@ -297,7 +297,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
                           CHRg <- rbPal1(2)[as.numeric(chrg)]
                           chr1g <- cbind(CHRg,CHRg)
 
-                          pdf(paste(sample.name,"_CopyKat_raw_results_gene_by_cell_heatmap.jpg",sep=""), height=h*2.5, width=40)
+                          pdf(paste(sample.name,"raw_results_gene_by_cell_heatmap.jpg",sep=""), height=h*2.5, width=40)
                           heatmap.3(t(results.com),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),
                           ColSideColors=chr1g,Colv=NA, Rowv=TRUE,
                           notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
@@ -309,7 +309,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
                          #end of ploting gene by cell matrix
 
                           } else {
-                          jpeg(paste(sample.name,"_CopyKat_raw_results_bin_by_cell_heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
+                          jpeg(paste(sample.name,"raw_results_bin_by_cell_heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
                           heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
                           ColSideColors=chr1,Colv=NA, Rowv=TRUE,
                           notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
@@ -326,7 +326,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
                           CHRg <- rbPal1(2)[as.numeric(chrg)]
                           chr1g <- cbind(CHRg,CHRg)
 
-                          pdf(paste(sample.name,"_CopyKat_raw_results_gene_by_cell_heatmap.pdf",sep=""), height=h*2.5, width=40)
+                          pdf(paste(sample.name,"raw_results_gene_by_cell_heatmap.pdf",sep=""), height=h*2.5, width=40)
                           heatmap.3(t(results.com),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
                           ColSideColors=chr1g,Colv=NA, Rowv=TRUE,
                           notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
