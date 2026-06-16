@@ -2,20 +2,25 @@
 
 A major challenge for single cell RNA sequencing of human tumors is to distinguish cancer cells from non-malignant cell types, as well as the presence of multiple tumor subclones. CopyKAT(Copynumber Karyotyping of Tumors) is a computational tool using integrative Bayesian approaches to identify genome-wide aneuploidy at 5MB resolution in single cells to separate tumor cells from normal cells, and tumor subclones using high-throughput sc-RNAseq data. The underlying logic for calculating DNA copy number events from RNAseq data is that gene expression levels of many adjacent genes can provide depth information to infer genomic copy number in that region. CopyKAT estimated copy number profiles can achieve a high concordance (80%) with the actual DNA copy numbers obtained by whole genome DNA sequencing. The rationale for prediction tumor/normal cell states is that aneuploidy is common in human cancers (90%). Cells with extensive genome-wide copy number aberrations (aneuploidy) are considered as tumor cells, wherease stromal normal cells and immune cells often have 2N diploid or near-diploid copy number profiles.  In this vignette, we will go through examples of calculating single cell copy number profiles from 10X single cell RNA data, predicting tumor and normal cells, and inferring tumor subclones from using the {copykat} R package. 
 
-## Key update in current version 1.2.5
-CopyKat outputs two additional intermediates before the final automatic prediction steps. This is particularly useful when normal cell names are provides or auto-prediction yields opposite grouping results.
-1) copykat_raw_results_gene_by_cell.txt, in which all cells are referred to normal cells, smoothed with DLM method, and segmented with MCMC. 
-2) copykat_raw_results_bin_by_cell.txt, in which all cells are referred to normal cells, smoothed with DLM method, segmented with MCMC, and converted to genomic bins. 
-Both files are good for downstream analysis. 
+## Key updates in current version 1.2.5
+CopyKat outputs two additional intermediates before the final automatic prediction steps. This is particularly useful when normal cell names are provided.
+1) copykat_raw_results_gene_by_cell.txt, in which cells are referred to normal cells, smoothed with DLM method, and segmented with MCMC. 
+2) copykat_raw_results_bin_by_cell.txt, in which cells are referred to normal cells, smoothed with DLM method, segmented with MCMC, and converted to genomic bins. 
 
-A conservative approach is added to partially mitigate false positive prediction of aneuploidy, though it still appears as a trade-off at this stage.
-
-## Critical notes
-The bin_by_cell.txt files generated in different runs/samples always have the same set of genomic bins, as such they can be freely combined for downstream analysis. The gene_by_cell.txt files will have different list of genes between samples, which can't be simply combined in downstream analysis. 
-For multiple samples, it's suggested to parallel by running individual samples and then combine the bin_by_cell.txt results across samples.
+Both files are suitable for downstream analysis. 
 
 ## Minor feature of v1.2.5
-Users can add prior cell typing results through the cell.group tab by inputing the named vector of cell types or clusters. As such, they will appear in the side bars of heatmap.
+Prior cell typing or clustering results can be added through the cell.group tab. It requires a vector of cell types or clusters, named with cell barcodes. As such, they will appear in the side bars of heatmap.
+
+A conservative EMD is added to partially mitigate false positive prediction of aneuploid, though it sometimes appears as a trade-off at this stage.
+
+## Critical notes
+The bin_by_cell.txt files generated in different runs/samples always have the same set of genomic bins, as such they can be freely combined for downstream analysis. 
+
+The gene_by_cell.txt files will have different list of genes between samples, which can't be simply combined in downstream analysis. 
+
+For multiple samples, it's suggested to parallel by running individual samples and then combine the bin_by_cell.txt results across samples.
+
 
 ## Step 1: installation
 Installing copykat from GitHub
