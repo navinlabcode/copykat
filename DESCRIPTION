@@ -1,7 +1,7 @@
 Package: copykat
 Type: Package
 Title: CopyKAT: Inference of genomic copy number and subclonal structure of human tumors from high-throughput single cell RNA-seq data
-Version: 1.2.3
+Version: 1.2.4
 Date: 2026-06-12
 Author: Ruli Gao
 Maintainer: Ruli Gao <ruli.gao@northwestern.edu>
