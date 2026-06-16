@@ -34,7 +34,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
   set.seed(1234)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
-  print("running copykat v1.2.4")
+  print("running copykat v1.2.5")
 
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
@@ -357,7 +357,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
         ### new change in v1.2.0
         final_k <- NULL
 
-        for (k in 6:2) {
+        for (k in 4:2) {
           temp_clusters <- cutree(hcc, k = k)
           min_size <- min(table(temp_clusters))
           if (min_size > 10) {
@@ -446,8 +446,8 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
         #confident diploid cluster
         cl.diploid <- which(cl.ID %in% max(cl.ID))
         cl.aneuploid  <- which(cl.ID %in% min(cl.ID))
-        conses.diploid <- apply(mat.adj[,which(hc.umap %in% cl.diploid)], 1, median)
-        conses.aneuploid <- apply(mat.adj[,which(hc.umap %in% cl.aneuploid)], 1, median)
+        conses.diploid <- apply(results.com[,which(hc.umap %in% cl.diploid)], 1, median)
+        conses.aneuploid <- apply(results.com[,which(hc.umap %in% cl.aneuploid)], 1, median)
 
         #assign
         com.preN <- names(hc.umap)
@@ -456,7 +456,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
           com.preN[1:length(com.preN)] <- "diploid"
         } else{
           for (i in 1:max(hc.umap)){
-            conses <- apply(mat.adj[,which(hc.umap ==i)], 1, median)
+            conses <- apply(results.com[,which(hc.umap ==i)], 1, median)
             if(transport::wasserstein1d(conses,conses.diploid) < transport::wasserstein1d(conses,conses.aneuploid)){
               # Quantify the minimum 'work' to transform profile A to profile B
               # Lower values mean higher true structural similarity
@@ -501,7 +501,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
   write.table(res, paste(sample.name, "prediction.txt",sep=""), sep="\t", row.names = FALSE, quote = FALSE)
 
   ####save copycat CNA
-  write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "CNA_final_results_bin_by_cell.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
+  write.table(cbind(Aj$RNA.adj[, 1:3], mat.adj), paste(sample.name, "final_results_bin_by_cell.txt", sep=""), sep="\t", row.names = FALSE, quote = F)
 
   ####%%%%%%%%%%%%%%%%%next heatmaps, subpopulations and tSNE overlay
   print("step 10: ploting heatmap ...")
@@ -688,7 +688,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
     ## Loop backwards from 10 clusters down to 2 to find the highest k that has more than 2 cells
     final_k <- NULL
 
-    for (k in 6:2) {
+    for (k in 4:2) {
       temp_clusters <- cutree(hcc, k = k)
       min_size <- min(table(temp_clusters))
       if (min_size > 10) {
@@ -778,8 +778,8 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
     #confident diploid cluster
     cl.diploid <- which(cl.ID==max(cl.ID))
     cl.aneuploid  <- which(cl.ID==min(cl.ID))
-    conses.diploid <- apply(mat.adj[,which(hc.umap %in% cl.diploid)], 1, median)
-    conses.aneuploid <- apply(mat.adj[,which(hc.umap %in% cl.aneuploid)], 1, median)
+    conses.diploid <- apply(results.com[,which(hc.umap %in% cl.diploid)], 1, median)
+    conses.aneuploid <- apply(results.com[,which(hc.umap %in% cl.aneuploid)], 1, median)
 
     #assign
     com.preN <- names(hc.umap)
@@ -788,7 +788,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
       com.preN[1:length(com.preN)] <- "diploid"
     } else{
       for (i in 1:max(hc.umap)){
-        conses <- apply(mat.adj[,which(hc.umap ==i)], 1, median)
+        conses <- apply(results.com[,which(hc.umap ==i)], 1, median)
         if(transport::wasserstein1d(conses,conses.diploid) < transport::wasserstein1d(conses,conses.aneuploid)){
           com.preN[which(hc.umap == i)] <- "diploid"
         }else{
