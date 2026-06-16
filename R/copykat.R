@@ -2,7 +2,7 @@
 #'
 #' @param rawmat raw data matrix; genes in rows; cell names in columns.
 #' @param id.type gene id type: Symbol or Ensemble.
-#' @param cell.group a vector of cell grouping information. names it with cell barcodes matched with rawmat. Only provide it when users want to see prior cell typing or clustering results in heatmap side bars.
+#' @param cell.group a vector of cell grouping information. Name it with cell barcodes matched with rawmat. Only provide it when users want to see prior cell typing or clustering results in heatmap side bars.
 #' @param cell.line if the data are from pure cell line,put "yes"; if cell line data are a mixture of tumor and normal cells, still put "no".
 #' @param LOW.DR minimal population fractions of genes for smoothing.
 #' @param UP.DR minimal population fractions of genes for segmentation.
@@ -34,7 +34,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
   set.seed(1234)
   sample.name <- paste(sam.name,"_copykat_", sep="")
 
-  print("running copykat v1.2.3")
+  print("running copykat v1.2.4")
 
   print("step1: read and filter data ...")
   print(paste(nrow(rawmat), " genes, ", ncol(rawmat), " cells in raw data", sep=""))
@@ -357,7 +357,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
         ### new change in v1.2.0
         final_k <- NULL
 
-        for (k in 4:2) {
+        for (k in 6:2) {
           temp_clusters <- cutree(hcc, k = k)
           min_size <- min(table(temp_clusters))
           if (min_size > 10) {
@@ -521,19 +521,18 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
 
   cells <- rbind(short.clust, compreN_pred)
 
-  leg.label <- c(paste("pred.",names(table(com.preN)),sep=""), paste("cl.",names(table(hc.short)),sep=""))
-  leg.color <- c(RColorBrewer::brewer.pal(n = 8, name = "Dark2")[2:1], RColorBrewer::brewer.pal(n = length(unique(hc.short)), name = "Set1"))
+  leg.label <- c(paste("pred.",levels(factor(com.preN)),sep=""), paste("cl.",levels(factor(hc.short)),sep=""))
+  leg.color <- c(rbPal5(length(unique(com.preN))), rbPal6(length(unique(hc.short))))
 
   if(length(cell.group)==ncol(mat.adj)){
     cell.group <- cell.group[order(match(names(cell.group), colnames(mat.adj)))]
-    rbPal7 <- colorRampPalette(RColorBrewer::brewer.pal(n = length(unique(cell.group)), name = "Paired"))
-
+    rbPal7 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Paired"))
     cellgroup <- rbPal7(length(unique(cell.group)))[as.numeric(factor(cell.group))]
 
     cells <- rbind(cellgroup, cells)
-    leg.label <- c(paste("pred.",names(table(com.preN)),sep=""), paste("cl.",names(table(hc.short)),sep=""), paste("group.",names(table(cell.group)),sep=""))
-    leg.color <- c(RColorBrewer::brewer.pal(n = 8, name = "Dark2")[2:1], RColorBrewer::brewer.pal(n = length(unique(hc.short)), name = "Set1"),
-                   RColorBrewer::brewer.pal(n = length(unique(cell.group)), name = "Paired"))
+
+    leg.label <- c(paste("pred.",levels(factor(com.preN)),sep=""), paste("cl.",levels(factor(hc.short)),sep=""), paste("cellgroup.",levels(factor(cell.group)),sep=""))
+    leg.color <- c(rbPal5(length(unique(com.preN))), rbPal6(length(unique(hc.short))), rbPal6(length(unique(cell.group))))
 
   }
 
@@ -556,7 +555,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
   col_breaks = c(seq(-1,-0.4,length=50),seq(-0.4,-0.2,length=150),seq(-0.2,0.2,length=600),seq(0.2,0.4,length=150),seq(0.4, 1,length=50))
 
   if(distance=="euclidean"){
-  jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
+  jpeg(paste(sample.name,"bin_by_cell_heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
    heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),
             ColSideColors=chr1,RowSideColors=cells,Colv=NA, Rowv=TRUE,
             notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
@@ -575,7 +574,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
     CHRg <- rbPal1(2)[as.numeric(chrg)]
     chr1g <- cbind(CHRg,CHRg)
 
-    pdf(paste(sample.name,"with_genes_heatmap.pdf",sep=""), height=h*2.5, width=40)
+    pdf(paste(sample.name,"gene_by_cell_heatmap.pdf",sep=""), height=h*2.5, width=40)
     heatmap.3(t(results.com),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),
               ColSideColors=chr1g,RowSideColors=cells,Colv=NA, Rowv=TRUE,
               notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
@@ -590,7 +589,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
 
 
   } else {
-    jpeg(paste(sample.name,"heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
+    jpeg(paste(sample.name,"bin_by_cell_heatmap.jpeg",sep=""), height=h*250, width=4000, res=100)
     heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
                  ColSideColors=chr1,RowSideColors=cells,Colv=NA, Rowv=TRUE,
               notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
@@ -610,7 +609,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
       CHRg <- rbPal1(2)[as.numeric(chrg)]
       chr1g <- cbind(CHRg,CHRg)
 
-      pdf(paste(sample.name,"with_genes_heatmap.pdf",sep=""), height=h*2.5, width=40)
+      pdf(paste(sample.name,"gene_by_cell_heatmap.pdf",sep=""), height=h*2.5, width=40)
       heatmap.3(t(results.com),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
                 ColSideColors=chr1g,RowSideColors=cells, Colv=NA, Rowv=TRUE,
                 notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
@@ -689,7 +688,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
     ## Loop backwards from 10 clusters down to 2 to find the highest k that has more than 2 cells
     final_k <- NULL
 
-    for (k in 4:2) {
+    for (k in 6:2) {
       temp_clusters <- cutree(hcc, k = k)
       min_size <- min(table(temp_clusters))
       if (min_size > 10) {
@@ -851,23 +850,20 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
 
     cells <- rbind(short.clust, compreN_pred)
 
-    leg.label <- c(paste("pred.",names(table(com.preN)),sep=""), paste("cl.",names(table(hc.short)),sep=""))
-    leg.color <- c(RColorBrewer::brewer.pal(n = 8, name = "Dark2")[2:1], RColorBrewer::brewer.pal(n = length(unique(hc.short)), name = "Set1"))
+    leg.label <- c(paste("pred.",levels(factor(com.preN)),sep=""), paste("cl.",levels(factor(hc.short)),sep=""))
+    leg.color <- c(rbPal5(length(unique(com.preN))), rbPal6(length(unique(hc.short))))
 
     if(length(cell.group)==ncol(mat.adj)){
       cell.group <- cell.group[order(match(names(cell.group), colnames(mat.adj)))]
-      rbPal7 <- colorRampPalette(RColorBrewer::brewer.pal(n = length(unique(cell.group)), name = "Paired"))
-
+      rbPal7 <- colorRampPalette(RColorBrewer::brewer.pal(n = 8, name = "Paired"))
       cellgroup <- rbPal7(length(unique(cell.group)))[as.numeric(factor(cell.group))]
 
       cells <- rbind(cellgroup, cells)
 
-      leg.label <- c(paste("pred.",names(table(com.preN)),sep=""), paste("cl.",names(table(hc.short)),sep=""), paste("group.",names(table(cell.group)),sep=""))
-      leg.color <- c(RColorBrewer::brewer.pal(n = 8, name = "Dark2")[2:1], RColorBrewer::brewer.pal(n = length(unique(hc.short)), name = "Set1"),
-                     RColorBrewer::brewer.pal(n = length(unique(cell.group)), name = "Paired"))
+      leg.label <- c(paste("pred.",levels(factor(com.preN)),sep=""), paste("cl.",levels(factor(hc.short)),sep=""), paste("cellgroup.",levels(factor(cell.group)),sep=""))
+      leg.color <- c(rbPal5(length(unique(com.preN))), rbPal6(length(unique(hc.short))), rbPal6(length(unique(cell.group))))
 
     }
-
 
     if (test.emd == "TRUE"){
       d_emd <- copykat::cal_dist(uber.mat.adj, method="emd", num_cores=n.cores) #emd on short gene by cell mat
@@ -889,7 +885,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
 
     if(distance=="euclidean"){
 
-        pdf(paste(sample.name,"with_genes_heatmap.pdf",sep=""), height=h*2.5, width=40)
+        pdf(paste(sample.name,"bin_by_cell_heatmap.pdf",sep=""), height=h*2.5, width=40)
         heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) parallelDist::parDist(x,threads =n.cores, method = distance), hclustfun = function(x) hclust(x, method="ward.D"),
                   ColSideColors=chr1g,RowSideColors=cells,Colv=NA, Rowv=TRUE,
                   notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
@@ -902,7 +898,7 @@ copykat <- function(rawmat=rawdata, id.type="S", cell.group="", cell.line="no", 
 
     } else {
 
-        pdf(paste(sample.name,"with_genes_heatmap1.pdf",sep=""), height=h*2.5, width=40)
+        pdf(paste(sample.name,"bin_by_cell_heatmap.pdf",sep=""), height=h*2.5, width=40)
         heatmap.3(t(mat.adj),dendrogram="r", distfun = function(x) as.dist(1-cor(t(x), method = distance)), hclustfun = function(x) hclust(x, method="ward.D"),
                   ColSideColors=chr1g,RowSideColors=cells,Colv=NA, Rowv=TRUE,
                   notecol="black",col=my_palette,breaks=col_breaks, key=TRUE,
